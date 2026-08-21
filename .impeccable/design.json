@@ -1,0 +1,149 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-21T07:36:00Z",
+  "title": "Design System: OsteoSys",
+  "extensions": {
+    "colorMeta": {
+      "clinical-blue":    { "role": "primary",   "displayName": "Clinical Blue",       "canonical": "#0284c7", "tonalRamp": ["#082f49","#0c4a6e","#075985","#0369a1","#0284c7","#0ea5e9","#38bdf8","#7dd3fc"] },
+      "clinical-blue-dark":{ "role": "primary",  "displayName": "Clinical Blue Dark",  "canonical": "#0369a1", "tonalRamp": ["#082f49","#0c4a6e","#075985","#0369a1","#0284c7","#0ea5e9","#38bdf8","#bae6fd"] },
+      "selection-sky":    { "role": "primary",   "displayName": "Sky Selection",       "canonical": "#bae6fd", "tonalRamp": ["#0c4a6e","#0369a1","#0284c7","#38bdf8","#7dd3fc","#bae6fd","#e0f2fe","#f0f9ff"] },
+      "surface-white":    { "role": "neutral",   "displayName": "Surface White",       "canonical": "#ffffff", "tonalRamp": ["#0f172a","#1e293b","#334155","#64748b","#94a3b8","#e2e8f0","#f1f5f9","#ffffff"] },
+      "surface-off-white":{ "role": "neutral",   "displayName": "Surface Off-White",   "canonical": "#f8fafc", "tonalRamp": ["#0f172a","#1e293b","#334155","#64748b","#94a3b8","#e2e8f0","#f1f5f9","#f8fafc"] },
+      "surface-subtle":   { "role": "neutral",   "displayName": "Surface Subtle",      "canonical": "#f1f5f9", "tonalRamp": ["#0f172a","#1e293b","#334155","#64748b","#94a3b8","#cbd5e1","#e2e8f0","#f1f5f9"] },
+      "rule":             { "role": "neutral",   "displayName": "Hairline Rule",       "canonical": "#e2e8f0", "tonalRamp": ["#334155","#475569","#64748b","#94a3b8","#cbd5e1","#e2e8f0","#f1f5f9","#f8fafc"] },
+      "text-primary":     { "role": "neutral",   "displayName": "Text Primary",        "canonical": "#0f172a", "tonalRamp": ["#020617","#0f172a","#1e293b","#334155","#475569","#64748b","#94a3b8","#cbd5e1"] },
+      "text-secondary":   { "role": "neutral",   "displayName": "Text Secondary",      "canonical": "#334155", "tonalRamp": ["#0f172a","#1e293b","#334155","#475569","#64748b","#94a3b8","#cbd5e1","#e2e8f0"] },
+      "text-muted":       { "role": "neutral",   "displayName": "Text Muted",          "canonical": "#64748b", "tonalRamp": ["#1e293b","#334155","#475569","#64748b","#94a3b8","#cbd5e1","#e2e8f0","#f1f5f9"] },
+      "footer-bg":        { "role": "neutral",   "displayName": "Footer Dark Ground",  "canonical": "#0f172a", "tonalRamp": ["#020617","#0f172a","#1e293b","#334155","#475569","#64748b","#94a3b8","#cbd5e1"] },
+      "error":            { "role": "tertiary",  "displayName": "Error Red",           "canonical": "#ef4444", "tonalRamp": ["#7f1d1d","#991b1b","#b91c1c","#dc2626","#ef4444","#f87171","#fca5a5","#fee2e2"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Hero section headline only — one instance per page." },
+      "headline": { "displayName": "Headline", "purpose": "Section H2 headings — one per section." },
+      "title":    { "displayName": "Title",   "purpose": "Device names, package names, standard item headings (H3 level)." },
+      "body":     { "displayName": "Body",    "purpose": "All descriptive copy, list items, form labels. Max 65–75ch." },
+      "label":    { "displayName": "Label",   "purpose": "Section overlines, badge text, table group headers — uppercase only." },
+      "data":     { "displayName": "Data / Mono", "purpose": "Clinical measurements exclusively: BMD, T-score, CV%, scan duration, phone numbers. Never UI copy." }
+    },
+    "shadows": [
+      {
+        "name": "nav-backdrop",
+        "value": "backdrop-filter: blur(4px); background: rgba(255,255,255,0.95); border-bottom: 1px solid #e2e8f0",
+        "purpose": "Fixed navigation bar only — signals content passes beneath, not decorative elevation."
+      },
+      {
+        "name": "spec-drawer",
+        "value": "-8px 0 24px rgba(0,0,0,0.08)",
+        "purpose": "Right-edge Spec Drawer when open — the only traditional box-shadow in the system."
+      }
+    ],
+    "motion": [
+      { "name": "state-transition", "value": "150ms linear", "purpose": "Color and border transitions on hover/focus for all interactive elements." },
+      { "name": "ease-out-standard", "value": "cubic-bezier(0, 0, 0.2, 1)", "purpose": "For any scroll-reveal or entrance animation — exponential ease-out from an already-visible default." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px",  "note": "Mobile→2col for MetricsStrip, button rows" },
+      { "name": "md", "value": "768px",  "note": "Equipment grid switches 1→3 col" },
+      { "name": "lg", "value": "1024px", "note": "Primary 2-col splits activate; sticky context panels engage; hero column order restores" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Forward-action CTA: Tư vấn B2B, Submit form, Yêu cầu báo giá.",
+      "html": "<button class=\"ds-btn-primary\">Nhận tư vấn B2B <svg class=\"ds-btn-icon\" xmlns=\"http://www.w3.org/2000/svg\" width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M9 18l6-6-6-6\"/></svg></button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; gap: 6px; padding: 12px 20px; background: #0284c7; color: #ffffff; font-family: Inter, system-ui, sans-serif; font-size: 14px; font-weight: 500; line-height: 1; border: none; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); cursor: pointer; transition: background 150ms linear; } .ds-btn-primary:hover { background: #0369a1; } .ds-btn-primary:focus-visible { outline: 2px solid #0284c7; outline-offset: 2px; } .ds-btn-primary:disabled { opacity: 0.7; cursor: not-allowed; } .ds-btn-icon { flex-shrink: 0; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Secondary action: Xem thiết bị & Catalog, Đóng, Cancel.",
+      "html": "<button class=\"ds-btn-ghost\">Xem thiết bị &amp; Catalog</button>",
+      "css": ".ds-btn-ghost { display: inline-flex; align-items: center; gap: 6px; padding: 12px 20px; background: transparent; color: #334155; font-family: Inter, system-ui, sans-serif; font-size: 14px; font-weight: 500; line-height: 1; border: 1px solid #e2e8f0; border-radius: 4px; cursor: pointer; transition: border-color 150ms linear, background 150ms linear; } .ds-btn-ghost:hover { border-color: #cbd5e1; background: #f8fafc; } .ds-btn-ghost:focus-visible { outline: 2px solid #0284c7; outline-offset: 2px; }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input-default",
+      "description": "Form field for org name, contact name, email, message.",
+      "html": "<div class=\"ds-field\"><label class=\"ds-label\" for=\"ds-input\">Tên đơn vị <span class=\"ds-required\">*</span></label><input class=\"ds-input\" id=\"ds-input\" type=\"text\" placeholder=\"VD: Bệnh viện Đại học Y Hà Nội\" /><p class=\"ds-error\" role=\"alert\">Tên đơn vị không được để trống</p></div>",
+      "css": ".ds-field { display: flex; flex-direction: column; gap: 6px; } .ds-label { font-family: Inter, system-ui, sans-serif; font-size: 14px; font-weight: 500; color: #334155; display: flex; align-items: center; gap: 4px; } .ds-required { color: #0284c7; } .ds-input { width: 100%; padding: 10px 12px; font-family: Inter, system-ui, sans-serif; font-size: 14px; color: #0f172a; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 4px; outline: none; transition: border-color 150ms linear, box-shadow 150ms linear; } .ds-input::placeholder { color: #94a3b8; } .ds-input:hover { border-color: #cbd5e1; } .ds-input:focus { border-color: #0284c7; box-shadow: 0 0 0 2px rgba(2,132,199,0.1); } .ds-input[aria-invalid] { border-color: #ef4444; box-shadow: 0 0 0 2px rgba(239,68,68,0.1); } .ds-error { font-size: 12px; color: #ef4444; margin-top: 2px; }"
+    },
+    {
+      "name": "Navigation Bar",
+      "kind": "nav",
+      "description": "Fixed top navigation — logo, links, hotline, CTA button.",
+      "html": "<header class=\"ds-nav\"><a class=\"ds-nav-logo\" href=\"#\"><span class=\"ds-nav-logo-mark\">OS</span><span class=\"ds-nav-wordmark\">OsteoSys</span></a><nav class=\"ds-nav-links\"><a class=\"ds-nav-link\" href=\"#equipment\">Thiết bị &amp; Công nghệ</a><a class=\"ds-nav-link\" href=\"#solutions\">Giải pháp B2B</a></nav><a class=\"ds-nav-cta\" href=\"#contact\">Tư vấn B2B</a></header>",
+      "css": ".ds-nav { position: fixed; top: 0; left: 0; right: 0; z-index: 50; display: flex; align-items: center; justify-content: space-between; height: 64px; padding: 0 32px; background: rgba(255,255,255,0.95); backdrop-filter: blur(4px); border-bottom: 1px solid #e2e8f0; } .ds-nav-logo { display: flex; align-items: center; gap: 8px; text-decoration: none; } .ds-nav-logo-mark { width: 32px; height: 32px; background: #0284c7; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 13px; font-family: Inter, system-ui, sans-serif; flex-shrink: 0; } .ds-nav-wordmark { font-family: Inter, system-ui, sans-serif; font-size: 18px; font-weight: 600; color: #0f172a; } .ds-nav-links { display: flex; gap: 4px; } .ds-nav-link { padding: 8px 12px; font-family: Inter, system-ui, sans-serif; font-size: 14px; font-weight: 500; color: #64748b; text-decoration: none; transition: color 150ms linear; } .ds-nav-link:hover { color: #0284c7; } .ds-nav-cta { display: inline-flex; align-items: center; gap: 4px; padding: 8px 16px; background: #0284c7; color: #ffffff; font-family: Inter, system-ui, sans-serif; font-size: 14px; font-weight: 500; border-radius: 4px; text-decoration: none; transition: background 150ms linear; } .ds-nav-cta:hover { background: #0369a1; }"
+    },
+    {
+      "name": "Device Card",
+      "kind": "card",
+      "refersTo": "card-default",
+      "description": "Equipment portfolio card — category badge, device name, description, spec CTA.",
+      "html": "<div class=\"ds-device-card\"><div class=\"ds-device-card-header\"><span class=\"ds-badge ds-badge-blue\">Central DEXA</span><span class=\"ds-device-card-sub\">Flagship</span></div><h3 class=\"ds-device-card-name\">OsteoSys DXA-Pro 7000</h3><p class=\"ds-device-card-tagline\">Hệ thống đo mật độ xương toàn thân &amp; cột sống</p><p class=\"ds-device-card-body\">Thiết bị DEXA fan-beam thế hệ mới, tích hợp phần mềm phân tích BMD tự động theo chuẩn ISCD.</p><button class=\"ds-spec-cta\">Xem thông số kỹ thuật →</button></div>",
+      "css": ".ds-device-card { background: #ffffff; border-right: 1px solid #e2e8f0; padding: 24px; display: flex; flex-direction: column; gap: 16px; transition: background 150ms linear; } .ds-device-card:hover { background: #f8fafc; } .ds-device-card-header { display: flex; align-items: center; gap: 8px; } .ds-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-family: \"JetBrains Mono\", monospace; font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; } .ds-badge-blue { background: rgba(2,132,199,0.1); color: #0284c7; } .ds-device-card-sub { font-size: 12px; color: #94a3b8; font-family: Inter, system-ui, sans-serif; } .ds-device-card-name { font-family: Inter, system-ui, sans-serif; font-size: 16px; font-weight: 600; color: #0f172a; margin: 0; } .ds-device-card-tagline { font-family: Inter, system-ui, sans-serif; font-size: 14px; color: #0284c7; margin: -8px 0 0; } .ds-device-card-body { font-family: Inter, system-ui, sans-serif; font-size: 14px; color: #334155; line-height: 1.6; margin: 0; flex: 1; } .ds-spec-cta { background: none; border: none; padding: 0; font-family: Inter, system-ui, sans-serif; font-size: 14px; font-weight: 500; color: #334155; cursor: pointer; transition: color 150ms linear; } .ds-spec-cta:hover { color: #0284c7; } .ds-spec-cta:focus-visible { outline: 2px solid #0284c7; outline-offset: 2px; border-radius: 2px; }"
+    },
+    {
+      "name": "Metric Cell",
+      "kind": "custom",
+      "description": "Clinical metric display: large monospace value + unit + label + note. Used in MetricsStrip and scan overlay.",
+      "html": "<div class=\"ds-metric\"><div class=\"ds-metric-value\">< 1.0<span class=\"ds-metric-unit\">%</span></div><p class=\"ds-metric-label\">Độ chính xác CV</p><p class=\"ds-metric-note\">In vivo precision</p></div>",
+      "css": ".ds-metric { display: flex; flex-direction: column; gap: 4px; padding: 24px; background: #f8fafc; transition: background 150ms linear; } .ds-metric:hover { background: #ffffff; } .ds-metric-value { font-family: \"JetBrains Mono\", \"Fira Code\", ui-monospace, monospace; font-size: 24px; font-weight: 600; color: #0284c7; line-height: 1; font-feature-settings: \"tnum\" 1; } .ds-metric-unit { font-size: 14px; font-weight: 400; color: #64748b; margin-left: 2px; } .ds-metric-label { font-family: Inter, system-ui, sans-serif; font-size: 14px; font-weight: 500; color: #1e293b; margin: 0; } .ds-metric-note { font-family: Inter, system-ui, sans-serif; font-size: 12px; color: #94a3b8; margin: 0; }"
+    },
+    {
+      "name": "Spec Table Row",
+      "kind": "custom",
+      "description": "Single row inside a device spec drawer or data table. Label left, monospace value right.",
+      "html": "<div class=\"ds-spec-row\"><span class=\"ds-spec-label\">Độ chính xác (CV in vivo)</span><span class=\"ds-spec-value\">&lt; 1.0 %</span></div>",
+      "css": ".ds-spec-row { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 12px 16px; border-bottom: 1px solid #e2e8f0; font-size: 14px; transition: background 150ms linear; } .ds-spec-row:hover { background: #f8fafc; } .ds-spec-row:last-child { border-bottom: none; } .ds-spec-label { color: #64748b; font-family: Inter, system-ui, sans-serif; } .ds-spec-value { font-family: \"JetBrains Mono\", \"Fira Code\", ui-monospace, monospace; font-weight: 600; color: #0f172a; text-align: right; font-feature-settings: \"tnum\" 1; }"
+    },
+    {
+      "name": "Section Overline",
+      "kind": "custom",
+      "description": "Label-level section marker placed before a section headline. Always uppercase, always clinical blue.",
+      "html": "<div class=\"ds-overline\"><div class=\"ds-overline-bar\"></div><span class=\"ds-overline-text\">Thiết bị &amp; Công nghệ</span></div>",
+      "css": ".ds-overline { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; } .ds-overline-bar { height: 1px; width: 32px; background: #0284c7; flex-shrink: 0; } .ds-overline-text { font-family: Inter, system-ui, sans-serif; font-size: 12px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: #0284c7; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Diagnostic Instrument",
+    "overview": "OsteoSys reads the way a DEXA scanner's own readout panel reads: every element earns its place because it carries information, not because it creates atmosphere. The substrate is white coated paper (#ffffff / #f8fafc) — the kind that laboratory results are printed on — and all depth and hierarchy come from hairline rules (1px #e2e8f0), weight differences in Inter, and the precise deployment of one clinical blue accent (#0284c7). There are no decorative shapes, no gradient fills, no background imagery behind text. The page is the data.\n\nThis is a Restrained color strategy: one accent color does all semantic work across the entire surface. Clinical blue appears on interactive elements, data highlights, and structural indicators. Its rarity is its authority — a blue element on this page means \"this matters clinically.\"\n\nThe component philosophy is clinical-authoritative: buttons have unambiguous weight, borders are clearly drawn, and focus states are designed to be noticed. The interface feels like it was designed to be used under fluorescent hospital lighting, by someone who needs the right answer on the first read.",
+    "keyCharacteristics": [
+      "White coated-paper substrate — no tinted or colored backgrounds in content regions",
+      "One accent (#0284c7) carries all data emphasis and interactivity; no second accent",
+      "Hairline rules (1px #e2e8f0) as the primary structural divider — borders replace shadows",
+      "Monospace numerals (JetBrains Mono) for all clinical measurements; never for UI copy",
+      "Label overlines in text-xs font-medium uppercase tracking-widest mark every section",
+      "Motion: 150ms linear transitions on color/border only; no transform animations in UI chrome"
+    ],
+    "rules": [
+      { "name": "The One Voice Rule", "body": "Clinical blue (#0284c7) appears on ≤15% of any given screen. Its rarity is the point — a blue element signals clinical relevance. Never use blue for decoration, section backgrounds, or non-interactive visual accents.", "section": "colors" },
+      { "name": "The No-Tint Rule", "body": "Content section backgrounds are white or #f8fafc only. No colored section backgrounds, no gradient washes, no hue-tinted surfaces outside the footer inversion.", "section": "colors" },
+      { "name": "The Mono-Only-for-Measurements Rule", "body": "JetBrains Mono appears exclusively on clinical measurement data, spec values, and contact numerals. It never appears on UI copy, navigation, or headings. Misuse reads as costume; correct use reads as precision.", "section": "typography" },
+      { "name": "The No-Kicker Rule", "body": "No label overlines directly above a heading element. The overline is a section marker placed before the section's headline block, at the section scope — never as an eyebrow riding directly above an h1/h2/h3.", "section": "typography" },
+      { "name": "The No-Card-Shadow Rule", "body": "Cards and containers never receive box-shadow at rest or on hover. Hover state on cards is a background color shift (white → slate-50), never a shadow lift. Shadows carry the wrong signal in a clinical instrument.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do use #0284c7 exclusively for data values, interactive elements, and section markers — nothing else.",
+      "Do use 1px solid #e2e8f0 (--rule) as the only divider token across all borders, hairline rules, and table separators.",
+      "Do set clinical measurement values (BMD, T-score, CV%, scan speed) in font-mono-data with tabular-nums enabled.",
+      "Do use text-xs font-medium uppercase tracking-widest text-[#0284c7] for section overlines — always before the section headline block.",
+      "Do keep section backgrounds to #ffffff and #f8fafc only. The footer (#0f172a) is the one exception.",
+      "Do write Vietnamese copy in sentence case for headings and body. Overlines and badge labels use uppercase.",
+      "Do size buttons consistently: py-2.5 px-4 for standard, py-3 px-5 for hero CTAs. Include a right ChevronRight on all forward-action buttons."
+    ],
+    "donts": [
+      "Don't add a second accent color. Teal (#0f766e) exists only as a device-category tag color — not a system accent.",
+      "Don't use box-shadow on cards or UI panels at rest or on hover. Shadow belongs only to the Spec Drawer and nav backdrop.",
+      "Don't use gradient fills, gradient text, or animated gradient borders anywhere in the system.",
+      "Don't use border-left or border-right thicker than 1px as a visual accent on cards or callouts.",
+      "Don't use numbered section markers (01 / 02 / 03) — the section overline labels provide sufficient hierarchy.",
+      "Don't use JetBrains Mono for UI labels, navigation, or headings — it signals measurement data only.",
+      "Don't place placeholder text inside spec tables or clinical data panels — omit the row rather than filling it with TBD."
+    ]
+  }
+}

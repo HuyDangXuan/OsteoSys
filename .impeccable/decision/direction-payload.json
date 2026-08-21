@@ -1,0 +1,82 @@
+{
+  "title": "Chọn thế giới thị giác cho OsteoSys",
+  "question": "Seed đã chỉ định hướng thiết kế số 5. Chọn để tiến hành xây dựng, hoặc chọn phương án thay thế / re-roll.",
+  "options": [
+    {
+      "id": "assigned",
+      "label": "Analytical Instrument Panel",
+      "kicker": "THE ROLL",
+      "lineage": "DEXA scanner interface / clinical analytical equipment displays",
+      "thesis": "The DEXA scanner's own control panel as the brand: precise measurement channels, dark substrate, one clinical-blue accent carrying every data signal, and the bone-density map as the hero canvas.",
+      "palette": ["#0c1420", "#0f2035", "#0284c7", "#f8fafc", "#94a3b8"],
+      "materials": ["controlled-environment substrate", "monospaced measurement numerals", "channel-separated data readouts", "clinical scan imagery"],
+      "viewport": "Dark near-black ground; full-width bone density scan image occupying two-thirds of the hero viewport. T-score and BMD value displayed as large precision numerals in clinical blue. One sharp white headline: 'Chuẩn xác lâm sàng. Mọi lần đo.' Dual CTA buttons (Explore Equipment / Request B2B Demo) in the lower-left third. No decorative elements — every pixel is measurement.",
+      "risk": "Dark mode may read as technology hardware rather than medical trust in conservative clinical markets; mitigated by pairing with the brand-pinned clinical blues and strict WCAG AA contrast.",
+      "raised": [
+        {
+          "from": "challenger: indoor-weather-sun",
+          "raise": "Spatial drama: the hero devotes one full viewport panel to a large-format scan image at monumental scale."
+        },
+        {
+          "from": "challenger: memory-quilt",
+          "raise": "Block-grid discipline: product and service cards sit on a strict 12-column grid with controlled gutter rhythm."
+        }
+      ],
+      "comp": ".impeccable/mocks/decision/assigned.webp"
+    },
+    {
+      "id": "model-pick",
+      "label": "Clinical Report Substrate",
+      "kicker": "IMPECCABLE'S PICK",
+      "lineage": "Radiology diagnostic report / WHO clinical data sheet",
+      "thesis": "The product seen through the printed radiology report: white substrate, fine rule lines separating data regions, T-score annotation in clinical blue, the scan image as a precision exhibit.",
+      "palette": ["#ffffff", "#f8fafc", "#0284c7", "#0f172a", "#64748b"],
+      "materials": ["white coated paper substrate", "hairline rule grid", "annotated scan exhibit", "clinical blue accent for data importance"],
+      "viewport": "Full-bleed white. Large annotated DEXA scan image left (clinical exhibit style). Right: product name in sharp dark grotesk, one bold BMD value in clinical blue, three validation metrics in fine print rule-separated rows. CTA as a solid clinical-blue block button.",
+      "risk": "Also the direction most runs in the medical B2B category land on — familiar and effective, but low differentiation.",
+      "comp": ".impeccable/mocks/decision/model-pick.webp"
+    },
+    {
+      "id": "challenger-wayfinding",
+      "label": "Medical Wayfinding Signage",
+      "verdict": "competitive",
+      "lineage": "Hospital corridor signage / AIGA symbol systems",
+      "thesis": "Each section of the portal is a decision junction on a medical corridor: teal sign bands, white humanist type, navigational clarity as the brand grammar.",
+      "palette": ["#0f766e", "#f0fdf4", "#0284c7", "#ffffff", "#0f172a"],
+      "materials": ["saturated teal sign panels", "white humanist sans pictograms", "arrow-locked edge rules"],
+      "viewport": "Nav as a teal sign band across the top. Hero: white corridor background fading to light; one large teal panel center-frame with OsteoSys name and 'Giải pháp đo mật độ xương B2B' in white bold. Teal CTA button.",
+      "case": "Strong audience identification — clinical environments live in this grammar; loses on product clarity because wayfinding reduces OsteoSys to a location, not a precision measurement brand.",
+      "risk": "Can read as hospital signage for a building, not for a product.",
+      "comp": ".impeccable/mocks/decision/challenger-wayfinding.webp",
+      "hero": "https://impeccable.style/worlds/cards/wayfinding-cartography-signage-terminal-yellow-wayfinding-hero.webp"
+    },
+    {
+      "id": "challenger-pharma-dossier",
+      "label": "Pharmaceutical Regulatory Dossier",
+      "verdict": "declined",
+      "lineage": "FDA/EMA clinical submission dossier",
+      "palette": ["#ffffff", "#1e3a5f", "#4ade80"],
+      "materials": ["tabular evidence grids", "regulation-green headers", "clinical hierarchy typography"],
+      "case": "Fuses poorly: the regulatory dossier world signals submission and compliance bureaucracy, not innovative medical technology purchase — B2B buyers want capability, not paperwork.",
+      "kept": "Clinical evidence hierarchy and tabular data density.",
+      "hero": "https://impeccable.style/worlds/cards/data-information-visual-scientific-paper-hero.webp"
+    }
+  ],
+  "canonCard": {
+    "label": "Chuẩn trang web thiết bị y tế B2B",
+    "thesis": "What every MedTech B2B site ships: product photography on white, structured spec tables, conservative blue accents, ISO badge strip.",
+    "palette": ["#ffffff", "#111827", "#2563eb", "#f1f5f9"],
+    "materials": ["studio product photography", "clean card grid", "ISO/CE badge system"],
+    "viewport": "White background, product image centered, spec table below, blue CTA.",
+    "risk": "Indistinguishable from every competitor in the market."
+  },
+  "reroll": {
+    "registers": ["safer", "bolder"]
+  },
+  "buildPath": {
+    "value": "code",
+    "toggle": false
+  },
+  "steer": true,
+  "canon": true
+}
