@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Users,
   Plus,
@@ -14,66 +14,47 @@ import {
 } from "lucide-react";
 import { CardGridSkeleton, TableEmptyState } from "@/components/admin/TableStates";
 
+interface PartnerItem {
+  id: string;
+  name: string;
+  type: string;
+  contactPerson: string;
+  phone: string;
+  email: string;
+  address: string;
+  activeRentals: number;
+  devices: string;
+}
+
 export default function CustomersPage() {
   const [search, setSearch] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [customers, setCustomers] = useState<PartnerItem[]>([]);
 
-  const initialCustomers = [
-    {
-      id: "KH-001",
-      name: "Bệnh viện Đa khoa Hồng Ngọc",
-      type: "Bệnh viện Đa khoa Tư nhân",
-      contactPerson: "BS. Nguyễn Văn Hùng (Trưởng khoa CĐHA)",
-      phone: "024 3927 5568",
-      email: "contact@hongngochospital.vn",
-      address: "55 Yên Ninh, Ba Đình, Hà Nội",
-      activeRentals: 2,
-      devices: "Sonost 3000 (#SN-4102, #SN-4105)",
-    },
-    {
-      id: "KH-002",
-      name: "Phòng khám Đa khoa Medlatec",
-      type: "Hệ thống Y tế / Phòng khám",
-      contactPerson: "KTV. Lê Thu Trang",
-      phone: "1900 56 56 56",
-      email: "info@medlatec.com",
-      address: "42 Nghĩa Dũng, Ba Đình, Hà Nội",
-      activeRentals: 1,
-      devices: "Sonost 3000 (#SN-8842)",
-    },
-    {
-      id: "KH-003",
-      name: "Bệnh viện Đại học Y Dược TP.HCM",
-      type: "Bệnh viện Công lập Hạng I",
-      contactPerson: "PGS.TS. Trần Minh Đức",
-      phone: "028 3855 4269",
-      email: "bvdhyd@umc.edu.vn",
-      address: "215 Hồng Bàng, Quận 5, TP.HCM",
-      activeRentals: 3,
-      devices: "Sonost 3000 (#SN-3190, #SN-3191, #SN-8800)",
-    },
-  ];
-
-  const handleReload = () => {
+  const fetchCustomers = useCallback(async () => {
     setIsLoading(true);
-    setTimeout(() => setIsLoading(false), 450);
-  };
+    try {
+      const query = new URLSearchParams();
+      if (search) query.set("search", search);
 
-  useEffect(() => {
-    if (search.trim()) {
-      setIsLoading(true);
-      const timer = setTimeout(() => setIsLoading(false), 300);
-      return () => clearTimeout(timer);
+      const res = await fetch(`/api/admin/customers?${query.toString()}`);
+      const json = await res.json();
+      if (json.status === "success" && json.data) {
+        setCustomers(json.data);
+      }
+    } catch (err) {
+      console.error("Failed to load customers:", err);
+    } finally {
+      setIsLoading(false);
     }
   }, [search]);
 
-  const filteredCustomers = initialCustomers.filter(
-    (c) =>
-      c.name.toLowerCase().includes(search.toLowerCase()) ||
-      c.id.toLowerCase().includes(search.toLowerCase()) ||
-      c.address.toLowerCase().includes(search.toLowerCase()) ||
-      c.contactPerson.toLowerCase().includes(search.toLowerCase())
-  );
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchCustomers();
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [fetchCustomers]);
 
   return (
     <div className="space-y-6">
@@ -85,21 +66,17 @@ export default function CustomersPage() {
             Danh sách Khách hàng B2B
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-            28 Bệnh viện, phòng khám đa khoa và doanh nghiệp đang hợp tác thuê và sử dụng thiết bị OsteoSys.
+            Dữ liệu trực tiếp MongoDB: Bệnh viện, phòng khám đa khoa và doanh nghiệp đang hợp tác thuê và sử dụng thiết bị OsteoSys.
           </p>
         </div>
 
         <div className="flex items-center gap-2.5">
           <button
-            onClick={handleReload}
+            onClick={fetchCustomers}
             title="Tải lại dữ liệu"
             className="p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-md transition-colors shadow-2xs"
           >
             <RefreshCw size={14} className={isLoading ? "animate-spin" : ""} />
-          </button>
-          <button className="flex items-center gap-1.5 px-3.5 py-1.5 bg-[#0284c7] hover:bg-[#0369a1] text-white text-xs font-semibold rounded-md shadow-2xs transition-colors">
-            <Plus size={14} />
-            <span>Thêm khách hàng mới</span>
           </button>
         </div>
       </div>
@@ -129,21 +106,19 @@ export default function CustomersPage() {
 
       {/* Content Grid with Skeleton & Empty States */}
       {isLoading ? (
-        <CardGridSkeleton count={3} />
-      ) : filteredCustomers.length === 0 ? (
+        <CardGridSkeleton count={6} />
+      ) : customers.length === 0 ? (
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-6">
           <TableEmptyState
             searchTerm={search}
             title="Không tìm thấy khách hàng nào"
             description={`Không có bệnh viện hay phòng khám nào khớp với từ khóa "${search}".`}
             onReset={() => setSearch("")}
-            createLabel="Thêm khách hàng mới"
-            onCreate={() => alert("Mở form thêm khách hàng")}
           />
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {filteredCustomers.map((c) => (
+          {customers.map((c) => (
             <div
               key={c.id}
               className="p-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-2xs flex flex-col justify-between gap-4 hover:border-[#0284c7] dark:hover:border-sky-500 transition-colors"
@@ -167,7 +142,7 @@ export default function CustomersPage() {
                 <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800/80 space-y-1.5 text-xs text-slate-600 dark:text-slate-300">
                   <p className="flex items-center gap-2">
                     <span className="font-semibold text-slate-800 dark:text-slate-200">Liên hệ:</span>{" "}
-                    {c.contactPerson}
+                    <span className="truncate">{c.contactPerson}</span>
                   </p>
                   <p className="flex items-center gap-2 font-mono-data">
                     <Phone size={12} className="text-slate-400" />
@@ -175,7 +150,7 @@ export default function CustomersPage() {
                   </p>
                   <p className="flex items-center gap-2">
                     <Mail size={12} className="text-slate-400" />
-                    {c.email}
+                    <span className="truncate">{c.email}</span>
                   </p>
                   <p className="flex items-start gap-2">
                     <MapPin size={12} className="text-slate-400 shrink-0 mt-0.5" />

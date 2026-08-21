@@ -1,24 +1,19 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   CalendarCheck,
   Search,
   Plus,
-  Filter,
-  ArrowUpDown,
-  Download,
-  Calendar,
   Building2,
-  AlertCircle,
-  FileCheck,
+  RefreshCw,
 } from "lucide-react";
 import { SkeletonDataTable } from "@/components/ui/skeleton";
 import { TableEmptyState } from "@/components/admin/TableStates";
 import { CreateRentalDrawer } from "@/components/admin/AdminDrawers";
 
-interface RentalContract {
+interface RentalContractItem {
   id: string;
   client: string;
   facilityType: string;
@@ -26,107 +21,46 @@ interface RentalContract {
   startDate: string;
   endDate: string;
   monthlyFee: string;
-  status: "active" | "pending" | "completed" | "overdue";
-  statusText: string;
-  bmdCheckups: number;
+  status: "active" | "expiring_soon" | "completed" | "terminated";
+  statusLabel: string;
+  scansCount: number;
 }
 
 export default function RentalManagementPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [contracts, setContracts] = useState<RentalContractItem[]>([]);
 
-  const [contracts, setContracts] = useState<RentalContract[]>([
-    {
-      id: "HD-2026-089",
-      client: "Bệnh viện Đa khoa Hồng Ngọc",
-      facilityType: "Bệnh viện Đa khoa",
-      device: "Sonost 3000 (#SN-4102)",
-      startDate: "15/08/2026",
-      endDate: "15/02/2027",
-      monthlyFee: "15.000.000 đ",
-      status: "active",
-      statusText: "Đang vận hành",
-      bmdCheckups: 342,
-    },
-    {
-      id: "HD-2026-088",
-      client: "Phòng khám Đa khoa Medlatec",
-      facilityType: "Phòng khám tư nhân",
-      device: "Sonost 3000 (#SN-8842)",
-      startDate: "01/08/2026",
-      endDate: "01/11/2026",
-      monthlyFee: "18.000.000 đ",
-      status: "active",
-      statusText: "Đang vận hành",
-      bmdCheckups: 512,
-    },
-    {
-      id: "HD-2026-087",
-      client: "BV ĐH Y Dược TP.HCM",
-      facilityType: "Bệnh viện Tuyến 1",
-      device: "Sonost 3000 (#SN-3190)",
-      startDate: "20/07/2026",
-      endDate: "20/01/2027",
-      monthlyFee: "16.500.000 đ",
-      status: "active",
-      statusText: "Đang vận hành",
-      bmdCheckups: 720,
-    },
-    {
-      id: "HD-2026-085",
-      client: "TT Y tế Quận Cầu Giấy",
-      facilityType: "Khám sức khỏe DN",
-      device: "Sonost 3000 (#SN-5541)",
-      startDate: "05/08/2026",
-      endDate: "25/08/2026",
-      monthlyFee: "12.000.000 đ",
-      status: "overdue",
-      statusText: "Sắp hết hạn",
-      bmdCheckups: 180,
-    },
-    {
-      id: "HD-2026-084",
-      client: "PK Quốc tế CarePlus",
-      facilityType: "Phòng khám quốc tế",
-      device: "Sonost 3000 (#SN-1022)",
-      startDate: "10/05/2026",
-      endDate: "10/08/2026",
-      monthlyFee: "15.000.000 đ",
-      status: "completed",
-      statusText: "Đã hoàn tất",
-      bmdCheckups: 490,
-    },
-  ]);
-
-  useEffect(() => {
+  const fetchContracts = useCallback(async () => {
     setIsLoading(true);
-    const timer = setTimeout(() => {
+    try {
+      const query = new URLSearchParams();
+      if (searchTerm) query.set("search", searchTerm);
+      if (statusFilter !== "all") query.set("tab", statusFilter);
+
+      const res = await fetch(`/api/admin/rentals?${query.toString()}`);
+      const json = await res.json();
+      if (json.status === "success" && json.data) {
+        setContracts(json.data);
+      }
+    } catch (err) {
+      console.error("Failed to load rental contracts:", err);
+    } finally {
       setIsLoading(false);
-    }, 250);
-    return () => clearTimeout(timer);
+    }
   }, [searchTerm, statusFilter]);
 
-  const filteredContracts = contracts.filter((c) => {
-    const matchesSearch =
-      c.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.device.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "all" || c.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchContracts();
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [fetchContracts]);
 
-  const handleCreateSuccess = (newContract: any) => {
-    setContracts([
-      {
-        ...newContract,
-        facilityType: "Cơ sở Y tế Đối tác",
-        monthlyFee: newContract.revenue,
-        bmdCheckups: 0,
-      },
-      ...contracts,
-    ]);
+  const handleCreateSuccess = () => {
+    fetchContracts();
   };
 
   return (
@@ -143,11 +77,18 @@ export default function RentalManagementPage() {
             Quản lý Hợp đồng Thuê Máy Sonost 3000
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-            Theo dõi tiến độ bàn giao, kiểm định định kỳ và doanh thu cho thuê theo cơ sở y tế.
+            Dữ liệu trực tiếp MongoDB: theo dõi tiến độ bàn giao, kiểm định định kỳ và doanh thu cho thuê.
           </p>
         </div>
 
         <div className="flex items-center gap-2">
+          <button
+            onClick={fetchContracts}
+            title="Tải lại dữ liệu"
+            className="p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-md transition-colors shadow-2xs"
+          >
+            <RefreshCw size={14} className={isLoading ? "animate-spin" : ""} />
+          </button>
           <motion.button
             whileTap={{ scale: 0.96 }}
             onClick={() => setIsDrawerOpen(true)}
@@ -166,9 +107,9 @@ export default function RentalManagementPage() {
           <div className="flex bg-slate-100 dark:bg-slate-800 p-0.5 rounded-md text-xs font-medium self-start">
             {[
               { id: "all", label: "Tất cả hợp đồng" },
-              { id: "active", label: "Đang vận hành (32)" },
-              { id: "overdue", label: "Sắp hết hạn (03)" },
-              { id: "completed", label: "Đã thanh lý (15)" },
+              { id: "active", label: "Đang vận hành" },
+              { id: "expiring_soon", label: "Sắp hết hạn" },
+              { id: "completed", label: "Đã hoàn tất" },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -209,7 +150,7 @@ export default function RentalManagementPage() {
             >
               <SkeletonDataTable rows={5} columns={6} />
             </motion.div>
-          ) : filteredContracts.length === 0 ? (
+          ) : contracts.length === 0 ? (
             <motion.div
               key="empty"
               initial={{ opacity: 0, scale: 0.98 }}
@@ -251,7 +192,7 @@ export default function RentalManagementPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
-                  {filteredContracts.map((c, idx) => (
+                  {contracts.map((c, idx) => (
                     <motion.tr
                       key={c.id}
                       initial={{ opacity: 0, y: 4 }}
@@ -279,20 +220,20 @@ export default function RentalManagementPage() {
                         {c.startDate} → {c.endDate}
                       </td>
                       <td className="py-3 px-3 text-center font-mono-data font-semibold text-[#0284c7] dark:text-sky-400">
-                        {c.bmdCheckups} ca
+                        {c.scansCount} ca
                       </td>
                       <td className="py-3 px-3">
                         <span
                           className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${
                             c.status === "active"
                               ? "bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800"
-                              : c.status === "overdue"
+                              : c.status === "expiring_soon"
                               ? "bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800 font-semibold"
                               : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
                           }`}
                         >
                           <span className="w-1.5 h-1.5 rounded-full bg-current" />
-                          {c.statusText}
+                          {c.statusLabel}
                         </span>
                       </td>
                       <td className="py-3 px-3 text-right font-mono-data font-bold text-slate-900 dark:text-slate-100">

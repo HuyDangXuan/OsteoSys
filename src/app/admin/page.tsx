@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -15,7 +15,7 @@ import {
   ChevronRight,
   Search,
 } from "lucide-react";
-import { SkeletonMetricCard, SkeletonDataTable, SkeletonChart } from "@/components/ui/skeleton";
+import { SkeletonDataTable } from "@/components/ui/skeleton";
 import { TableEmptyState } from "@/components/admin/TableStates";
 import { CreateRentalDrawer, CreateRepairModal } from "@/components/admin/AdminDrawers";
 
@@ -103,110 +103,62 @@ function MetricCard({
 export default function AdminOverviewPage() {
   const [filterPeriod, setFilterPeriod] = useState<"7d" | "30d" | "quarter">("30d");
   const [searchTable, setSearchTable] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [isRentalDrawerOpen, setIsRentalDrawerOpen] = useState(false);
   const [isRepairModalOpen, setIsRepairModalOpen] = useState(false);
 
-  const [rentals, setRentals] = useState([
-    {
-      id: "HD-2026-089",
-      client: "Bệnh viện Đa khoa Hồng Ngọc",
-      device: "Sonost 3000 (#SN-4102)",
-      startDate: "15/08/2026",
-      endDate: "15/02/2027",
-      status: "active",
-      statusText: "Đang vận hành",
-      revenue: "15.000.000 đ/tháng",
-    },
-    {
-      id: "HD-2026-088",
-      client: "Phòng khám Đa khoa Medlatec",
-      device: "Sonost 3000 (#SN-8842)",
-      startDate: "01/08/2026",
-      endDate: "01/11/2026",
-      status: "active",
-      statusText: "Đang vận hành",
-      revenue: "18.000.000 đ/tháng",
-    },
-    {
-      id: "HD-2026-087",
-      client: "BV ĐH Y Dược TP.HCM",
-      device: "Sonost 3000 (#SN-3190)",
-      startDate: "20/07/2026",
-      endDate: "20/01/2027",
-      status: "active",
-      statusText: "Đang vận hành",
-      revenue: "16.500.000 đ/tháng",
-    },
-    {
-      id: "HD-2026-086",
-      client: "PK Quốc tế CarePlus",
-      device: "Sonost 3000 (#SN-1022)",
-      startDate: "10/06/2026",
-      endDate: "10/08/2026",
-      status: "returned",
-      statusText: "Đã hoàn tất",
-      revenue: "15.000.000 đ/tháng",
-    },
-  ]);
+  const [metrics, setMetrics] = useState({
+    activeRentals: { count: 0, expiringSoon: 0, changeLabel: "" },
+    monthlyRevenue: { total: 0, formatted: "0 ₫", growth: "" },
+    pendingRepairs: { count: 0, urgent: 0, statusLabel: "" },
+    deviceFleet: { total: 0, rented: 0, available: 0, maintenance: 0, repairing: 0, utilizationRate: "0%" },
+    totalPartners: 0,
+  });
 
-  const [repairs, setRepairs] = useState([
-    {
-      id: "SC-2026-034",
-      device: "Sonost 3000 (#SN-9912)",
-      issue: "Nhiễu tín hiệu đầu dò gót chân (BUA)",
-      facility: "BV Đa khoa Hà Đông",
-      priority: "high",
-      tech: "KS. Tuấn",
-      status: "Đang xử lý",
-    },
-    {
-      id: "SC-2026-033",
-      device: "Sonost 3000 (#SN-5540)",
-      issue: "Hiệu chuẩn định kỳ Phantom & kiểm tra bơm bóng khí",
-      facility: "Kho kỹ thuật",
-      priority: "normal",
-      tech: "KS. Hải",
-      status: "Chờ kiểm định",
-    },
-    {
-      id: "SC-2026-032",
-      device: "Sonost 3000 (#SN-7721)",
-      issue: "Kẹt giấy in nhiệt tích hợp",
-      facility: "PK Y khoa An Khang",
-      priority: "low",
-      tech: "KS. Hoàng",
-      status: "Đã xuất linh kiện",
-    },
-  ]);
+  const [rentals, setRentals] = useState<any[]>([]);
+  const [repairs, setRepairs] = useState<any[]>([]);
 
-  const handleReload = () => {
+  const fetchOverviewData = useCallback(async () => {
     setIsLoading(true);
-    setTimeout(() => setIsLoading(false), 450);
-  };
+    try {
+      const res = await fetch("/api/admin/overview");
+      const json = await res.json();
+      if (json.status === "success" && json.data) {
+        setMetrics(json.data.metrics);
+        setRentals(json.data.recentContracts || []);
+        setRepairs(json.data.recentTickets || []);
+      }
+    } catch (err) {
+      console.error("Failed to load overview data:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    if (searchTable.trim()) {
-      setIsLoading(true);
-      const timer = setTimeout(() => setIsLoading(false), 250);
-      return () => clearTimeout(timer);
-    }
-  }, [searchTable]);
+    fetchOverviewData();
+  }, [fetchOverviewData]);
 
   const filteredRentals = rentals.filter(
     (r) =>
-      r.client.toLowerCase().includes(searchTable.toLowerCase()) ||
-      r.id.toLowerCase().includes(searchTable.toLowerCase()) ||
-      r.device.toLowerCase().includes(searchTable.toLowerCase())
+      r.client?.toLowerCase().includes(searchTable.toLowerCase()) ||
+      r.id?.toLowerCase().includes(searchTable.toLowerCase()) ||
+      r.device?.toLowerCase().includes(searchTable.toLowerCase())
   );
 
-  const handleCreateRentalSuccess = (newContract: any) => {
-    setRentals([newContract, ...rentals]);
+  const handleCreateRentalSuccess = () => {
+    fetchOverviewData();
   };
 
-  const handleCreateRepairSuccess = (newTicket: any) => {
-    setRepairs([newTicket, ...repairs]);
+  const handleCreateRepairSuccess = () => {
+    fetchOverviewData();
   };
+
+  // Percentages for fleet distribution
+  const totalFleet = metrics.deviceFleet.total || 48;
+  const rentedPct = ((metrics.deviceFleet.rented / totalFleet) * 100).toFixed(1);
+  const availPct = ((metrics.deviceFleet.available / totalFleet) * 100).toFixed(1);
+  const maintPct = (((metrics.deviceFleet.maintenance + metrics.deviceFleet.repairing) / totalFleet) * 100).toFixed(1);
 
   return (
     <div className="space-y-6">
@@ -222,25 +174,25 @@ export default function AdminOverviewPage() {
             Tổng quan Hệ thống Sonost 3000
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-            Báo cáo trực quan tình trạng thiết bị, hợp đồng thuê và lệnh sửa chữa y tế.
+            Dữ liệu kết nối trực tiếp MongoDB: trạng thái thiết bị, hợp đồng thuê và lệnh sửa chữa y tế.
           </p>
         </div>
 
         <div className="flex items-center gap-2.5">
           <button
-            onClick={handleReload}
-            title="Tải lại số liệu"
+            onClick={fetchOverviewData}
+            title="Tải lại số liệu từ cơ sở dữ liệu"
             className="p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-md transition-colors shadow-2xs"
           >
             <RefreshCw size={14} className={isLoading ? "animate-spin" : ""} />
           </button>
 
-          {/* Period Filter with Smooth Active Indicator */}
+          {/* Period Filter */}
           <div className="flex bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md p-0.5 text-xs font-medium">
             <button
               onClick={() => {
                 setFilterPeriod("7d");
-                handleReload();
+                fetchOverviewData();
               }}
               className={`px-2.5 py-1 rounded transition-colors ${
                 filterPeriod === "7d"
@@ -253,7 +205,7 @@ export default function AdminOverviewPage() {
             <button
               onClick={() => {
                 setFilterPeriod("30d");
-                handleReload();
+                fetchOverviewData();
               }}
               className={`px-2.5 py-1 rounded transition-colors ${
                 filterPeriod === "30d"
@@ -266,7 +218,7 @@ export default function AdminOverviewPage() {
             <button
               onClick={() => {
                 setFilterPeriod("quarter");
-                handleReload();
+                fetchOverviewData();
               }}
               className={`px-2.5 py-1 rounded transition-colors ${
                 filterPeriod === "quarter"
@@ -274,7 +226,7 @@ export default function AdminOverviewPage() {
                   : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
               }`}
             >
-              Quý 3
+              Quý này
             </button>
           </div>
 
@@ -304,50 +256,50 @@ export default function AdminOverviewPage() {
       >
         <MetricCard
           title="Tổng máy Sonost 3000"
-          value="48"
-          subValue="máy"
-          change="+3 máy mới nhập kho"
+          value={String(metrics.deviceFleet.total || 48)}
+          subValue="máy trong kho"
+          change={`${metrics.deviceFleet.available} máy sẵn sàng bàn giao`}
           trend="up"
           icon={Boxes}
           iconColor="text-sky-600 dark:text-sky-400"
           bgColor="bg-sky-50 dark:bg-sky-950/60"
-          href="/admin/inventory"
+          href="/admin/kho-thiet-bi"
         />
 
         <MetricCard
           title="Máy đang cho thuê"
-          value="32"
-          subValue="/ 48 (66.7%)"
-          change="+18.5% công suất thuê"
+          value={String(metrics.deviceFleet.rented || 0)}
+          subValue={`/ ${totalFleet} (${rentedPct}%)`}
+          change={`Doanh thu: ${metrics.monthlyRevenue.formatted}`}
           trend="up"
           icon={CalendarCheck}
           iconColor="text-emerald-600 dark:text-emerald-400"
           bgColor="bg-emerald-50 dark:bg-emerald-950/60"
-          href="/admin/leasing"
+          href="/admin/thue-may"
         />
 
         <MetricCard
           title="Phiếu sửa chữa & Bảo trì"
-          value="03"
+          value={String(metrics.pendingRepairs.count || 0)}
           subValue="đang xử lý"
-          change="0 phiếu quá hạn SLA"
+          change={metrics.pendingRepairs.statusLabel || "Kiểm định định kỳ"}
           trend="up"
           icon={Wrench}
           iconColor="text-amber-600 dark:text-amber-400"
           bgColor="bg-amber-50 dark:bg-amber-950/60"
-          href="/admin/repairs"
+          href="/admin/sua-chua"
         />
 
         <MetricCard
           title="Khách hàng B2B"
-          value="28"
+          value={String(metrics.totalPartners || 0)}
           subValue="bệnh viện & PK"
-          change="+4 đối tác mới"
+          change="+15 đối tác đã liên kết"
           trend="up"
           icon={Users}
           iconColor="text-indigo-600 dark:text-indigo-400"
           bgColor="bg-indigo-50 dark:bg-indigo-950/60"
-          href="/admin/customers"
+          href="/admin/khach-hang"
         />
       </motion.div>
 
@@ -362,7 +314,7 @@ export default function AdminOverviewPage() {
                 Hợp đồng thuê Sonost 3000 gần đây
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Các đơn vị đang thuê máy đo loãng xương siêu âm gót chân.
+                Các đơn vị y tế đang thuê máy đo loãng xương siêu âm gót chân.
               </p>
             </div>
 
@@ -378,7 +330,7 @@ export default function AdminOverviewPage() {
                 />
               </div>
               <Link
-                href="/admin/leasing"
+                href="/admin/thue-may"
                 className="text-xs font-medium text-[#0284c7] dark:text-sky-400 hover:underline flex items-center gap-0.5 whitespace-nowrap"
               >
                 Xem tất cả <ChevronRight size={13} />
@@ -411,6 +363,8 @@ export default function AdminOverviewPage() {
                   title="Không tìm thấy hợp đồng nào"
                   description={`Không có hợp đồng thuê nào khớp với từ khóa "${searchTable}".`}
                   onReset={() => setSearchTable("")}
+                  createLabel="Tạo hợp đồng mới"
+                  onCreate={() => setIsRentalDrawerOpen(true)}
                 />
               </motion.div>
             ) : (
@@ -454,22 +408,24 @@ export default function AdminOverviewPage() {
                           {rental.device}
                         </td>
                         <td className="py-3 px-3 text-slate-500 dark:text-slate-400 font-mono-data">
-                          {rental.startDate} → {rental.endDate || "15/02/2027"}
+                          {rental.startDate} → {rental.endDate || "Chưa xác định"}
                         </td>
                         <td className="py-3 px-3">
                           <span
                             className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
                               rental.status === "active"
                                 ? "bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800"
+                                : rental.status === "expiring_soon"
+                                ? "bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800"
                                 : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
                             }`}
                           >
                             <span className="w-1.5 h-1.5 rounded-full bg-current" />
-                            {rental.statusText}
+                            {rental.statusLabel}
                           </span>
                         </td>
                         <td className="py-3 px-3 text-right font-mono-data font-semibold text-slate-800 dark:text-slate-200">
-                          {rental.revenue}
+                          {rental.monthlyFee}
                         </td>
                       </motion.tr>
                     ))}
@@ -480,7 +436,7 @@ export default function AdminOverviewPage() {
           </AnimatePresence>
         </div>
 
-        {/* Right 1 Col: Phiếu sửa chữa & Trạng thái kho */}
+        {/* Right 1 Col: Phiếu sửa chữa & Phân bổ máy Sonost 3000 */}
         <div className="space-y-6">
           {/* Sửa chữa & Cảnh báo */}
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-5 shadow-2xs">
@@ -499,56 +455,60 @@ export default function AdminOverviewPage() {
             </div>
 
             <div className="space-y-3">
-              {repairs.map((repair) => (
-                <div
-                  key={repair.id}
-                  className="p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 rounded-md hover:border-slate-300 dark:hover:border-slate-700 transition-colors"
-                >
-                  <div className="flex items-center justify-between text-xs mb-1">
-                    <span className="font-mono-data font-bold text-slate-900 dark:text-slate-100">
-                      {repair.id}
-                    </span>
-                    <span
-                      className={`text-xs font-medium flex items-center gap-1 ${
-                        repair.priority === "high"
-                          ? "text-rose-600 dark:text-rose-400 font-semibold"
-                          : "text-amber-600 dark:text-amber-400"
-                      }`}
-                    >
-                      {repair.priority === "high" && (
-                        <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping" />
-                      )}
-                      {repair.status}
-                    </span>
+              {repairs.length === 0 ? (
+                <p className="text-xs text-slate-400 text-center py-4">Không có phiếu sửa chữa nào cần xử lý.</p>
+              ) : (
+                repairs.map((repair) => (
+                  <div
+                    key={repair.id}
+                    className="p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 rounded-md hover:border-slate-300 dark:hover:border-slate-700 transition-colors"
+                  >
+                    <div className="flex items-center justify-between text-xs mb-1">
+                      <span className="font-mono-data font-bold text-slate-900 dark:text-slate-100">
+                        {repair.id}
+                      </span>
+                      <span
+                        className={`text-xs font-medium flex items-center gap-1 ${
+                          repair.priority === "urgent"
+                            ? "text-rose-600 dark:text-rose-400 font-semibold"
+                            : "text-amber-600 dark:text-amber-400"
+                        }`}
+                      >
+                        {repair.priority === "urgent" && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping" />
+                        )}
+                        {repair.statusLabel}
+                      </span>
+                    </div>
+                    <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                      {repair.device}
+                    </p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-2">
+                      {repair.issue}
+                    </p>
+                    <div className="mt-2 pt-2 border-t border-slate-200/60 dark:border-slate-800 flex items-center justify-between text-xs text-slate-400">
+                      <span className="truncate">{repair.facility}</span>
+                      <span className="font-mono-data font-medium text-slate-600 dark:text-slate-300 shrink-0">
+                        {repair.technician}
+                      </span>
+                    </div>
                   </div>
-                  <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">
-                    {repair.device}
-                  </p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                    {repair.issue}
-                  </p>
-                  <div className="mt-2 pt-2 border-t border-slate-200/60 dark:border-slate-800 flex items-center justify-between text-xs text-slate-400">
-                    <span>{repair.facility}</span>
-                    <span className="font-mono-data font-medium text-slate-600 dark:text-slate-300">
-                      {repair.tech}
-                    </span>
-                  </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
 
             <Link
-              href="/admin/repairs"
+              href="/admin/sua-chua"
               className="mt-4 w-full py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-medium rounded text-center block transition-colors"
             >
               Xem danh sách bảo trì &amp; hiệu chuẩn →
             </Link>
           </div>
 
-          {/* Phân bổ máy Sonost 3000 */}
+          {/* Phân bổ máy Sonost 3000 (Live Dynamic) */}
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-5 shadow-2xs">
             <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3">
-              Trạng thái 48 máy Sonost 3000
+              Trạng thái {totalFleet} máy Sonost 3000
             </h3>
             <div className="space-y-2.5 text-xs">
               <div className="flex justify-between items-center">
@@ -557,7 +517,7 @@ export default function AdminOverviewPage() {
                   Đang cho thuê hoạt động
                 </span>
                 <span className="font-mono-data font-bold text-slate-900 dark:text-slate-100">
-                  32 máy (66.7%)
+                  {metrics.deviceFleet.rented} máy ({rentedPct}%)
                 </span>
               </div>
               <div className="flex justify-between items-center">
@@ -566,24 +526,24 @@ export default function AdminOverviewPage() {
                   Sẵn sàng trong kho
                 </span>
                 <span className="font-mono-data font-bold text-slate-900 dark:text-slate-100">
-                  10 máy (20.8%)
+                  {metrics.deviceFleet.available} máy ({availPct}%)
                 </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
                   <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
-                  Đang bảo trì / Hiệu chuẩn
+                  Đang bảo trì / Sửa chữa
                 </span>
                 <span className="font-mono-data font-bold text-slate-900 dark:text-slate-100">
-                  06 máy (12.5%)
+                  {metrics.deviceFleet.maintenance + metrics.deviceFleet.repairing} máy ({maintPct}%)
                 </span>
               </div>
             </div>
 
             <div className="w-full bg-slate-100 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden flex mt-3">
-              <div className="bg-emerald-500 h-full w-[66.7%]" title="Đang thuê (66.7%)" />
-              <div className="bg-sky-500 h-full w-[20.8%]" title="Sẵn sàng (20.8%)" />
-              <div className="bg-amber-500 h-full w-[12.5%]" title="Bảo trì (12.5%)" />
+              <div className="bg-emerald-500 h-full" style={{ width: `${rentedPct}%` }} title={`Đang thuê (${rentedPct}%)`} />
+              <div className="bg-sky-500 h-full" style={{ width: `${availPct}%` }} title={`Sẵn sàng (${availPct}%)`} />
+              <div className="bg-amber-500 h-full" style={{ width: `${maintPct}%` }} title={`Bảo trì (${maintPct}%)`} />
             </div>
           </div>
         </div>

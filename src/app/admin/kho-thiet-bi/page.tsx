@@ -1,18 +1,14 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Boxes,
   Search,
   Plus,
-  Radio,
-  ShieldCheck,
-  Calendar,
-  CheckCircle2,
-  AlertTriangle,
+  RefreshCw,
   History,
-  Activity,
+  ShieldCheck,
 } from "lucide-react";
 import { SkeletonDeviceCard } from "@/components/ui/skeleton";
 import { TableEmptyState } from "@/components/admin/TableStates";
@@ -20,99 +16,48 @@ import { TableEmptyState } from "@/components/admin/TableStates";
 interface DeviceItem {
   serial: string;
   model: string;
-  status: "rented" | "available" | "maintenance";
-  statusText: string;
+  year: number;
   location: string;
-  lastQC: string;
+  status: "rented" | "available" | "under_maintenance" | "repairing" | "decommissioned";
+  statusLabel: string;
+  calibrationDate: string;
+  nextCalibration: string;
+  cvScore: string;
+  qcStatus: string;
   totalScans: number;
-  phantomPrecision: string;
 }
 
 export default function InventoryManagementPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [devices, setDevices] = useState<DeviceItem[]>([]);
 
-  const devices: DeviceItem[] = [
-    {
-      serial: "SN-4102",
-      model: "Sonost 3000 PRO (Waterless Ultrasound)",
-      status: "rented",
-      statusText: "Đang cho thuê",
-      location: "BV Đa khoa Hồng Ngọc",
-      lastQC: "15/08/2026",
-      totalScans: 1420,
-      phantomPrecision: "CV 0.85%",
-    },
-    {
-      serial: "SN-8842",
-      model: "Sonost 3000 PRO (Waterless Ultrasound)",
-      status: "rented",
-      statusText: "Đang cho thuê",
-      location: "PK Đa khoa Medlatec",
-      lastQC: "01/08/2026",
-      totalScans: 2850,
-      phantomPrecision: "CV 0.92%",
-    },
-    {
-      serial: "SN-3190",
-      model: "Sonost 3000 PRO (Waterless Ultrasound)",
-      status: "rented",
-      statusText: "Đang cho thuê",
-      location: "BV ĐH Y Dược TP.HCM",
-      lastQC: "20/07/2026",
-      totalScans: 4100,
-      phantomPrecision: "CV 0.88%",
-    },
-    {
-      serial: "SN-1022",
-      model: "Sonost 3000 PRO (Waterless Ultrasound)",
-      status: "available",
-      statusText: "Sẵn sàng trong kho",
-      location: "Kho Kỹ thuật Hà Nội",
-      lastQC: "10/08/2026",
-      totalScans: 850,
-      phantomPrecision: "CV 0.79%",
-    },
-    {
-      serial: "SN-9912",
-      model: "Sonost 3000 PRO (Waterless Ultrasound)",
-      status: "maintenance",
-      statusText: "Đang sửa chữa",
-      location: "Phòng Lab Hiệu chuẩn",
-      lastQC: "20/08/2026",
-      totalScans: 3200,
-      phantomPrecision: "Đang cân chỉnh BUA",
-    },
-    {
-      serial: "SN-5540",
-      model: "Sonost 3000 PRO (Waterless Ultrasound)",
-      status: "maintenance",
-      statusText: "Kiểm chuẩn định kỳ",
-      location: "Kho Kỹ thuật TP.HCM",
-      lastQC: "19/08/2026",
-      totalScans: 1950,
-      phantomPrecision: "Phantom QC Pending",
-    },
-  ];
-
-  useEffect(() => {
+  const fetchDevices = useCallback(async () => {
     setIsLoading(true);
-    const timer = setTimeout(() => {
+    try {
+      const query = new URLSearchParams();
+      if (searchTerm) query.set("search", searchTerm);
+      if (statusFilter !== "all") query.set("status", statusFilter);
+
+      const res = await fetch(`/api/admin/devices?${query.toString()}`);
+      const json = await res.json();
+      if (json.status === "success" && json.data) {
+        setDevices(json.data);
+      }
+    } catch (err) {
+      console.error("Failed to load devices:", err);
+    } finally {
       setIsLoading(false);
-    }, 250);
-    return () => clearTimeout(timer);
+    }
   }, [searchTerm, statusFilter]);
 
-  const filteredDevices = devices.filter((d) => {
-    const matchesSearch =
-      d.serial.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      d.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      d.model.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus =
-      statusFilter === "all" || d.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchDevices();
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [fetchDevices]);
 
   return (
     <div className="space-y-6">
@@ -128,14 +73,17 @@ export default function InventoryManagementPage() {
             Kho Thiết Bị 48 Máy Sonost 3000
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-            Theo dõi tình trạng máy, số serial, lịch sử kiểm chuẩn Phantom và vị trí vận hành.
+            Dữ liệu trực tiếp MongoDB: theo dõi tình trạng máy, số serial, lịch sử kiểm chuẩn Phantom và vị trí vận hành.
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          <button className="flex items-center gap-1.5 px-3.5 py-1.5 bg-[#0284c7] hover:bg-[#0369a1] text-white text-xs font-semibold rounded-md shadow-2xs transition-colors">
-            <Plus size={14} />
-            <span>Nhập máy mới</span>
+          <button
+            onClick={fetchDevices}
+            title="Tải lại dữ liệu"
+            className="p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-md transition-colors shadow-2xs"
+          >
+            <RefreshCw size={14} className={isLoading ? "animate-spin" : ""} />
           </button>
         </div>
       </motion.div>
@@ -146,10 +94,11 @@ export default function InventoryManagementPage() {
           {/* Status Tabs */}
           <div className="flex bg-slate-100 dark:bg-slate-800 p-0.5 rounded-md text-xs font-medium self-start">
             {[
-              { id: "all", label: "Tất cả (48)" },
-              { id: "rented", label: "Đang cho thuê (32)" },
-              { id: "available", label: "Sẵn sàng kho (10)" },
-              { id: "maintenance", label: "Hiệu chuẩn / Sửa (06)" },
+              { id: "all", label: `Tất cả (${devices.length})` },
+              { id: "rented", label: "Đang cho thuê" },
+              { id: "available", label: "Sẵn sàng kho" },
+              { id: "under_maintenance", label: "Bảo trì / Hiệu chuẩn" },
+              { id: "repairing", label: "Đang sửa chữa" },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -193,7 +142,7 @@ export default function InventoryManagementPage() {
                 <SkeletonDeviceCard key={idx} />
               ))}
             </motion.div>
-          ) : filteredDevices.length === 0 ? (
+          ) : devices.length === 0 ? (
             <motion.div
               key="empty"
               initial={{ opacity: 0, scale: 0.98 }}
@@ -216,13 +165,13 @@ export default function InventoryManagementPage() {
               key="grid"
               variants={{
                 hidden: { opacity: 0 },
-                visible: { opacity: 1, transition: { staggerChildren: 0.04 } },
+                visible: { opacity: 1, transition: { staggerChildren: 0.03 } },
               }}
               initial="hidden"
               animate="visible"
               className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
             >
-              {filteredDevices.map((d) => (
+              {devices.map((d) => (
                 <motion.div
                   key={d.serial}
                   variants={{
@@ -238,7 +187,7 @@ export default function InventoryManagementPage() {
                         #{d.serial}
                       </span>
                       <p className="text-xs text-slate-500 dark:text-slate-400">
-                        {d.model}
+                        {d.model} (SX: {d.year})
                       </p>
                     </div>
                     <span
@@ -247,25 +196,27 @@ export default function InventoryManagementPage() {
                           ? "bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800"
                           : d.status === "available"
                           ? "bg-sky-50 dark:bg-sky-950 text-sky-700 dark:text-sky-400 border border-sky-200 dark:border-sky-800"
-                          : "bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800"
+                          : d.status === "under_maintenance"
+                          ? "bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800"
+                          : "bg-rose-50 dark:bg-rose-950 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-800 font-semibold"
                       }`}
                     >
                       <span className="w-1.5 h-1.5 rounded-full bg-current" />
-                      {d.statusText}
+                      {d.statusLabel}
                     </span>
                   </div>
 
                   <div className="space-y-1.5 text-xs">
                     <div className="flex justify-between items-center text-slate-600 dark:text-slate-300">
                       <span className="text-slate-400">Vị trí hiện tại:</span>
-                      <span className="font-medium text-slate-900 dark:text-slate-100 truncate max-w-[160px]">
+                      <span className="font-medium text-slate-900 dark:text-slate-100 truncate max-w-[160px]" title={d.location}>
                         {d.location}
                       </span>
                     </div>
                     <div className="flex justify-between items-center text-slate-600 dark:text-slate-300">
-                      <span className="text-slate-400">Hiệu chuẩn Phantom:</span>
+                      <span className="text-slate-400">Độ lặp lại Phantom:</span>
                       <span className="font-mono-data font-semibold text-[#0284c7] dark:text-sky-400">
-                        {d.phantomPrecision}
+                        CV {d.cvScore} ({d.qcStatus})
                       </span>
                     </div>
                     <div className="flex justify-between items-center text-slate-600 dark:text-slate-300">
@@ -277,10 +228,8 @@ export default function InventoryManagementPage() {
                   </div>
 
                   <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-400">
-                    <span>QC gần nhất: {d.lastQC}</span>
-                    <button className="text-[#0284c7] dark:text-sky-400 font-semibold hover:underline flex items-center gap-0.5">
-                      <History size={12} /> Nhật ký
-                    </button>
+                    <span>QC gần nhất: {d.calibrationDate}</span>
+                    <span className="font-mono-data text-xs text-slate-500">Hạn: {d.nextCalibration}</span>
                   </div>
                 </motion.div>
               ))}

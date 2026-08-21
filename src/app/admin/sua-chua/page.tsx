@@ -1,120 +1,70 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Wrench,
   Search,
   Plus,
-  AlertTriangle,
-  CheckCircle2,
   Clock,
   Building2,
   User,
-  ShieldCheck,
+  RefreshCw,
 } from "lucide-react";
 import { SkeletonDataTable } from "@/components/ui/skeleton";
 import { TableEmptyState } from "@/components/admin/TableStates";
 import { CreateRepairModal } from "@/components/admin/AdminDrawers";
 
-interface RepairTicket {
+interface RepairTicketItem {
   id: string;
   device: string;
   issue: string;
+  diagnosis: string;
   facility: string;
-  priority: "high" | "normal" | "low";
-  priorityText: string;
-  tech: string;
+  priority: "urgent" | "calibration" | "normal" | "low";
+  priorityLabel: string;
   status: string;
+  statusLabel: string;
+  technician: string;
   receivedDate: string;
+  partsCount: number;
 }
 
 export default function RepairManagementPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [tickets, setTickets] = useState<RepairTicketItem[]>([]);
 
-  const [tickets, setTickets] = useState<RepairTicket[]>([
-    {
-      id: "SC-2026-034",
-      device: "Sonost 3000 (#SN-9912)",
-      issue: "Nhiễu tín hiệu đầu dò gót chân (BUA) sau 1.200 ca đo",
-      facility: "BV Đa khoa Hà Đông",
-      priority: "high",
-      priorityText: "Khẩn cấp",
-      tech: "KS. Tuấn",
-      status: "Đang xử lý đầu dò",
-      receivedDate: "20/08/2026",
-    },
-    {
-      id: "SC-2026-033",
-      device: "Sonost 3000 (#SN-5540)",
-      issue: "Hiệu chuẩn định kỳ Phantom & kiểm tra bơm bóng khí tự động",
-      facility: "Kho kỹ thuật Hà Nội",
-      priority: "normal",
-      priorityText: "Bình thường",
-      tech: "KS. Hải",
-      status: "Chờ kiểm định ISCD",
-      receivedDate: "19/08/2026",
-    },
-    {
-      id: "SC-2026-032",
-      device: "Sonost 3000 (#SN-7721)",
-      issue: "Kẹt giấy in nhiệt tích hợp & vệ sinh khay đặt gót chân",
-      facility: "PK Y khoa An Khang",
-      priority: "low",
-      priorityText: "Thấp",
-      tech: "KS. Hoàng",
-      status: "Đã xuất linh kiện",
-      receivedDate: "18/08/2026",
-    },
-    {
-      id: "SC-2026-031",
-      device: "Sonost 3000 (#SN-4022)",
-      issue: "Thay thế màng bóng dầu siêu âm & cân chỉnh nhiệt độ cảm biến",
-      facility: "PK Đa khoa Medlatec",
-      priority: "normal",
-      priorityText: "Bình thường",
-      tech: "KS. Tuấn",
-      status: "Đã bàn giao",
-      receivedDate: "15/08/2026",
-    },
-  ]);
-
-  useEffect(() => {
+  const fetchTickets = useCallback(async () => {
     setIsLoading(true);
-    const timer = setTimeout(() => {
+    try {
+      const query = new URLSearchParams();
+      if (searchTerm) query.set("search", searchTerm);
+      if (priorityFilter !== "all") query.set("priority", priorityFilter);
+
+      const res = await fetch(`/api/admin/repairs?${query.toString()}`);
+      const json = await res.json();
+      if (json.status === "success" && json.data) {
+        setTickets(json.data);
+      }
+    } catch (err) {
+      console.error("Failed to load repair tickets:", err);
+    } finally {
       setIsLoading(false);
-    }, 250);
-    return () => clearTimeout(timer);
+    }
   }, [searchTerm, priorityFilter]);
 
-  const filteredTickets = tickets.filter((t) => {
-    const matchesSearch =
-      t.device.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      t.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      t.facility.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      t.issue.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesPriority =
-      priorityFilter === "all" || t.priority === priorityFilter;
-    return matchesSearch && matchesPriority;
-  });
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchTickets();
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [fetchTickets]);
 
-  const handleCreateSuccess = (newTicket: any) => {
-    setTickets([
-      {
-        ...newTicket,
-        priorityText:
-          newTicket.priority === "high"
-            ? "Khẩn cấp"
-            : newTicket.priority === "normal"
-            ? "Bình thường"
-            : "Thấp",
-        receivedDate: "Hôm nay",
-      },
-      ...tickets,
-    ]);
+  const handleCreateSuccess = () => {
+    fetchTickets();
   };
 
   return (
@@ -131,11 +81,18 @@ export default function RepairManagementPage() {
             Quản lý Sửa chữa &amp; Hiệu chuẩn Sonost 3000
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-            Lịch sử kiểm định Phantom, bảo dưỡng bóng khí và thay thế đầu dò siêu âm định kỳ.
+            Dữ liệu trực tiếp MongoDB: lịch sử kiểm định Phantom, bảo dưỡng bóng khí và thay thế đầu dò siêu âm.
           </p>
         </div>
 
         <div className="flex items-center gap-2">
+          <button
+            onClick={fetchTickets}
+            title="Tải lại dữ liệu"
+            className="p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-md transition-colors shadow-2xs"
+          >
+            <RefreshCw size={14} className={isLoading ? "animate-spin" : ""} />
+          </button>
           <motion.button
             whileTap={{ scale: 0.96 }}
             onClick={() => setIsModalOpen(true)}
@@ -154,9 +111,9 @@ export default function RepairManagementPage() {
           <div className="flex bg-slate-100 dark:bg-slate-800 p-0.5 rounded-md text-xs font-medium self-start">
             {[
               { id: "all", label: "Tất cả phiếu" },
-              { id: "high", label: "🚨 Khẩn cấp (01)" },
-              { id: "normal", label: "⚠️ Hiệu chuẩn (02)" },
-              { id: "low", label: "ℹ️ Thấp (01)" },
+              { id: "urgent", label: "🚨 Khẩn cấp" },
+              { id: "calibration", label: "⚠️ Hiệu chuẩn" },
+              { id: "normal", label: "ℹ️ Bình thường" },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -197,7 +154,7 @@ export default function RepairManagementPage() {
             >
               <SkeletonDataTable rows={5} columns={6} />
             </motion.div>
-          ) : filteredTickets.length === 0 ? (
+          ) : tickets.length === 0 ? (
             <motion.div
               key="empty"
               initial={{ opacity: 0, scale: 0.98 }}
@@ -238,7 +195,7 @@ export default function RepairManagementPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
-                  {filteredTickets.map((t, idx) => (
+                  {tickets.map((t, idx) => (
                     <motion.tr
                       key={t.id}
                       initial={{ opacity: 0, y: 4 }}
@@ -267,29 +224,29 @@ export default function RepairManagementPage() {
                       <td className="py-3 px-3">
                         <span
                           className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            t.priority === "high"
+                            t.priority === "urgent"
                               ? "bg-rose-50 dark:bg-rose-950 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-800 font-bold"
-                              : t.priority === "normal"
-                              ? "bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800"
+                              : t.priority === "calibration"
+                              ? "bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800 font-semibold"
                               : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
                           }`}
                         >
-                          {t.priority === "high" && (
+                          {t.priority === "urgent" && (
                             <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping" />
                           )}
-                          {t.priorityText}
+                          {t.priorityLabel}
                         </span>
                       </td>
                       <td className="py-3 px-3 font-mono-data font-medium text-slate-700 dark:text-slate-300">
                         <span className="flex items-center gap-1">
                           <User size={12} className="text-slate-400" />
-                          {t.tech}
+                          {t.technician}
                         </span>
                       </td>
                       <td className="py-3 px-3">
                         <span className="font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-1">
                           <Clock size={12} className="text-[#0284c7]" />
-                          {t.status}
+                          {t.statusLabel}
                         </span>
                       </td>
                     </motion.tr>

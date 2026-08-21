@@ -32,32 +32,37 @@ export function CreateRentalDrawer({
 }: CreateRentalDrawerProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
-    client: "",
-    deviceSerial: "SN-4102",
-    startDate: "2026-09-01",
+    partnerName: "",
+    deviceSerial: "OST-3000-8842",
+    startDate: new Date().toISOString().split("T")[0],
     durationMonths: "6",
     monthlyFee: "15000000",
+    packageType: "monthly",
     notes: "",
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
-      if (onSuccess) {
-        onSuccess({
-          id: `HD-2026-${Math.floor(100 + Math.random() * 900)}`,
-          client: formData.client,
-          device: `Sonost 3000 (#${formData.deviceSerial})`,
-          startDate: formData.startDate,
-          status: "active",
-          statusText: "Đang vận hành",
-          revenue: `${parseInt(formData.monthlyFee).toLocaleString("vi-VN")} đ/tháng`,
-        });
+    try {
+      const res = await fetch("/api/admin/rentals", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+      const data = await res.json();
+      if (data.status === "success") {
+        if (onSuccess) onSuccess(data.data);
+        onClose();
+      } else {
+        alert("Lỗi tạo hợp đồng: " + data.message);
       }
-      onClose();
-    }, 600);
+    } catch (err) {
+      console.error(err);
+      alert("Lỗi kết nối cơ sở dữ liệu");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -96,7 +101,7 @@ export function CreateRentalDrawer({
               <button
                 type="button"
                 onClick={onClose}
-                className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-md hover:bg-slate-100 dark:bg-slate-800 transition-colors"
               >
                 <X size={18} />
               </button>
@@ -113,8 +118,8 @@ export function CreateRentalDrawer({
                   type="text"
                   required
                   placeholder="VD: Bệnh viện Đa khoa Tâm Anh"
-                  value={formData.client}
-                  onChange={(e) => setFormData({ ...formData, client: e.target.value })}
+                  value={formData.partnerName}
+                  onChange={(e) => setFormData({ ...formData, partnerName: e.target.value })}
                   className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md outline-none focus:border-[#0284c7] focus:ring-1 focus:ring-[#0284c7]"
                 />
               </div>
@@ -129,10 +134,10 @@ export function CreateRentalDrawer({
                   onChange={(e) => setFormData({ ...formData, deviceSerial: e.target.value })}
                   className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md outline-none focus:border-[#0284c7]"
                 >
-                  <option value="SN-4102">Sonost 3000 PRO — SN-4102 (Kho Hà Nội)</option>
-                  <option value="SN-8842">Sonost 3000 PRO — SN-8842 (Kho TP.HCM)</option>
-                  <option value="SN-3190">Sonost 3000 PRO — SN-3190 (Kho Đà Nẵng)</option>
-                  <option value="SN-1022">Sonost 3000 PRO — SN-1022 (Kho Kỹ thuật)</option>
+                  <option value="OST-3000-8842">Sonost 3000 PRO — OST-3000-8842 (Kho Tổng Hà Nội)</option>
+                  <option value="OST-3000-8835">Sonost 3000 — OST-3000-8835 (Kho Tổng Hà Nội)</option>
+                  <option value="OST-3000-8838">Sonost 3000 PRO — OST-3000-8838 (Kho TP.HCM)</option>
+                  <option value="OST-3000-8840">Sonost 3000 PRO — OST-3000-8840 (Kho TP.HCM)</option>
                 </select>
               </div>
 
@@ -158,6 +163,7 @@ export function CreateRentalDrawer({
                     onChange={(e) => setFormData({ ...formData, durationMonths: e.target.value })}
                     className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md outline-none focus:border-[#0284c7]"
                   >
+                    <option value="1">01 tháng (Sự kiện / Khám đoàn)</option>
                     <option value="3">03 tháng (Ngắn hạn)</option>
                     <option value="6">06 tháng (Tiêu chuẩn)</option>
                     <option value="12">12 tháng (Dài hạn - Ưu đãi)</option>
@@ -208,7 +214,7 @@ export function CreateRentalDrawer({
                   {isSubmitting ? (
                     <>
                       <Loader2 size={14} className="animate-spin" />
-                      <span>Đang lưu hợp đồng...</span>
+                      <span>Đang lưu vào MongoDB...</span>
                     </>
                   ) : (
                     <>
@@ -242,31 +248,36 @@ export function CreateRepairModal({
 }: CreateRepairModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
-    deviceSerial: "SN-9912",
-    issue: "",
-    priority: "high",
-    facility: "BV Đa khoa Hà Đông",
-    tech: "KS. Tuấn",
+    deviceSerial: "OST-3000-8845",
+    reportedIssue: "",
+    priority: "urgent",
+    partnerName: "Bệnh viện Đa khoa Hà Đông",
+    technicianName: "Kỹ sư Nguyễn Văn Tuấn",
+    estimatedDays: "2",
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
-      if (onSuccess) {
-        onSuccess({
-          id: `SC-2026-${Math.floor(100 + Math.random() * 900)}`,
-          device: `Sonost 3000 (#${formData.deviceSerial})`,
-          issue: formData.issue,
-          facility: formData.facility,
-          priority: formData.priority,
-          tech: formData.tech,
-          status: "Đang xử lý",
-        });
+    try {
+      const res = await fetch("/api/admin/repairs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+      const data = await res.json();
+      if (data.status === "success") {
+        if (onSuccess) onSuccess(data.data);
+        onClose();
+      } else {
+        alert("Lỗi tạo phiếu sửa chữa: " + data.message);
       }
-      onClose();
-    }, 500);
+    } catch (err) {
+      console.error(err);
+      alert("Lỗi kết nối cơ sở dữ liệu");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -320,9 +331,10 @@ export function CreateRepairModal({
                   onChange={(e) => setFormData({ ...formData, deviceSerial: e.target.value })}
                   className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md outline-none focus:border-[#0284c7]"
                 >
-                  <option value="SN-9912">Sonost 3000 — #SN-9912 (BV Đa khoa Hà Đông)</option>
-                  <option value="SN-5540">Sonost 3000 — #SN-5540 (Kho kỹ thuật)</option>
-                  <option value="SN-7721">Sonost 3000 — #SN-7721 (PK An Khang)</option>
+                  <option value="OST-3000-8845">Sonost 3000 — OST-3000-8845 (Kho Tổng)</option>
+                  <option value="OST-3000-8846">Sonost 3000 PRO — OST-3000-8846 (Kho Kỹ Thuật)</option>
+                  <option value="OST-3000-8847">Sonost 3000 — OST-3000-8847 (BV Đa khoa Hà Đông)</option>
+                  <option value="OST-3000-8848">Sonost 3000 PRO — OST-3000-8848 (PK An Khang)</option>
                 </select>
               </div>
 
@@ -334,8 +346,8 @@ export function CreateRepairModal({
                   type="text"
                   required
                   placeholder="VD: Nhiễu tín hiệu đầu dò gót chân BUA hoặc bơm bóng khí không căng..."
-                  value={formData.issue}
-                  onChange={(e) => setFormData({ ...formData, issue: e.target.value })}
+                  value={formData.reportedIssue}
+                  onChange={(e) => setFormData({ ...formData, reportedIssue: e.target.value })}
                   className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md outline-none focus:border-[#0284c7]"
                 />
               </div>
@@ -350,9 +362,9 @@ export function CreateRepairModal({
                     onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
                     className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md outline-none focus:border-[#0284c7]"
                   >
-                    <option value="high">🚨 Khẩn cấp (Máy ngừng đo)</option>
-                    <option value="normal">⚠️ Bình thường (Hiệu chuẩn Phantom)</option>
-                    <option value="low">ℹ️ Thấp (Bảo dưỡng linh kiện phụ)</option>
+                    <option value="urgent">🚨 Khẩn cấp (Máy ngừng đo)</option>
+                    <option value="calibration">⚠️ Bình thường (Hiệu chuẩn Phantom)</option>
+                    <option value="normal">ℹ️ Thấp (Bảo dưỡng linh kiện phụ)</option>
                   </select>
                 </div>
 
@@ -362,8 +374,8 @@ export function CreateRepairModal({
                   </label>
                   <input
                     type="text"
-                    value={formData.tech}
-                    onChange={(e) => setFormData({ ...formData, tech: e.target.value })}
+                    value={formData.technicianName}
+                    onChange={(e) => setFormData({ ...formData, technicianName: e.target.value })}
                     className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md outline-none focus:border-[#0284c7]"
                   />
                 </div>
