@@ -101,7 +101,7 @@ export default function NotificationDropdown() {
       >
         <Bell size={18} />
         {unreadCount > 0 && (
-          <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-[#0284c7] text-white text-xs font-bold rounded-full flex items-center justify-center font-mono-data animate-pulse">
+          <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-[#0284c7] dark:bg-cyan-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center font-mono-data animate-pulse">
             {unreadCount}
           </span>
         )}
@@ -116,16 +116,16 @@ export default function NotificationDropdown() {
             exit={{ opacity: 0, scale: 0.95, y: -4 }}
             transition={{ duration: 0.15, ease: "easeOut" }}
             style={{ transformOrigin: "top right" }}
-            className="absolute right-0 mt-2 w-80 sm:w-96 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-xl z-50 overflow-hidden will-change-transform"
+            className="absolute right-0 mt-2 w-80 sm:w-96 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl z-50 overflow-hidden will-change-transform"
           >
             {/* Header */}
             <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wide">
                   Thông báo hệ thống
                 </h3>
                 {unreadCount > 0 && (
-                  <span className="px-1.5 py-0.5 text-xs font-mono-data bg-sky-100 dark:bg-sky-950 text-[#0284c7] dark:text-sky-400 rounded font-medium">
+                  <span className="px-1.5 py-0.5 text-[10px] font-mono-data bg-sky-100 dark:bg-cyan-950/70 text-[#0284c7] dark:text-cyan-400 rounded font-semibold border border-transparent dark:border-cyan-800/40">
                     {unreadCount} mới
                   </span>
                 )}
@@ -133,7 +133,7 @@ export default function NotificationDropdown() {
               {unreadCount > 0 && (
                 <button
                   onClick={markAllAsRead}
-                  className="text-xs text-[#0284c7] hover:text-[#0369a1] dark:hover:text-sky-300 flex items-center gap-1 font-medium"
+                  className="text-xs text-[#0284c7] hover:text-[#0369a1] dark:text-cyan-400 dark:hover:text-cyan-300 flex items-center gap-1 font-medium"
                 >
                   <Check size={12} /> Đã đọc tất cả
                 </button>
@@ -141,7 +141,7 @@ export default function NotificationDropdown() {
             </div>
 
             {/* Filter Tabs */}
-            <div className="flex border-b border-slate-100 dark:border-slate-800 px-2 pt-2 bg-slate-50/50 dark:bg-slate-950/50 text-xs">
+            <div className="flex border-b border-slate-100 dark:border-slate-800 px-2 pt-2 bg-slate-50/50 dark:bg-[#0b0f17]/60 text-xs">
               {[
                 { id: "all", label: "Tất cả" },
                 { id: "maintenance", label: "Bảo trì & Sự cố" },
@@ -152,7 +152,7 @@ export default function NotificationDropdown() {
                   onClick={() => setActiveTab(tab.id as typeof activeTab)}
                   className={`px-3 py-1.5 font-medium border-b-2 transition-colors ${
                     activeTab === tab.id
-                      ? "border-[#0284c7] text-[#0284c7] dark:text-sky-400"
+                      ? "border-[#0284c7] dark:border-cyan-400 text-[#0284c7] dark:text-cyan-400 font-semibold"
                       : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300"
                   }`}
                 >
@@ -175,22 +175,22 @@ export default function NotificationDropdown() {
                     className={`p-3 sm:p-3.5 flex gap-3 transition-colors cursor-pointer ${
                       n.read
                         ? "hover:bg-slate-50 dark:hover:bg-slate-800/40 opacity-75"
-                        : "bg-sky-50/40 dark:bg-sky-950/20 hover:bg-sky-50/70 dark:hover:bg-sky-950/40"
+                        : "bg-sky-50/40 dark:bg-cyan-950/20 hover:bg-sky-50/70 dark:hover:bg-cyan-950/40"
                     }`}
                   >
                     <div className="shrink-0 mt-0.5">
                       {n.type === "warning" && (
-                        <div className="w-7 h-7 rounded bg-amber-100 dark:bg-amber-950 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                        <div className="w-7 h-7 rounded bg-amber-100 dark:bg-amber-950/70 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-transparent dark:border-amber-800/40">
                           <AlertTriangle size={14} />
                         </div>
                       )}
                       {n.type === "maintenance" && (
-                        <div className="w-7 h-7 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                        <div className="w-7 h-7 rounded bg-emerald-100 dark:bg-emerald-950/70 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-transparent dark:border-emerald-800/40">
                           <Wrench size={14} />
                         </div>
                       )}
                       {n.type === "rental" && (
-                        <div className="w-7 h-7 rounded bg-sky-100 dark:bg-sky-950 text-[#0284c7] dark:text-sky-400 flex items-center justify-center">
+                        <div className="w-7 h-7 rounded bg-sky-100 dark:bg-cyan-950/70 text-[#0284c7] dark:text-cyan-400 flex items-center justify-center border border-transparent dark:border-cyan-800/40">
                           <CalendarCheck size={14} />
                         </div>
                       )}
@@ -207,13 +207,13 @@ export default function NotificationDropdown() {
                           {n.title}
                         </p>
                         {!n.read && (
-                          <span className="w-2 h-2 rounded-full bg-[#0284c7] shrink-0 mt-1" />
+                          <span className="w-2 h-2 rounded-full bg-[#0284c7] dark:bg-cyan-400 shrink-0 mt-1" />
                         )}
                       </div>
                       <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5 leading-relaxed line-clamp-2">
                         {n.description}
                       </p>
-                      <div className="flex items-center gap-1 mt-1.5 text-xs text-slate-400 font-mono-data">
+                      <div className="flex items-center gap-1 mt-1.5 text-[10px] text-slate-400 font-mono-data">
                         <Clock size={10} />
                         <span>{n.time}</span>
                       </div>
@@ -224,10 +224,10 @@ export default function NotificationDropdown() {
             </div>
 
             {/* Footer */}
-            <div className="p-2 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-center">
+            <div className="p-2 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-[#0b0f17] text-center">
               <a
                 href="/admin/sua-chua"
-                className="text-xs font-medium text-[#0284c7] dark:text-sky-400 hover:underline block py-1"
+                className="text-xs font-medium text-[#0284c7] dark:text-cyan-400 hover:underline block py-1"
               >
                 Xem nhật ký bảo dưỡng &amp; cảnh báo →
               </a>

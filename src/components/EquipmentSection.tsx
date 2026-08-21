@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ChevronRight, ExternalLink, Radio, Activity, CheckCircle2, ArrowRight } from "lucide-react";
+import { X, ChevronRight, ArrowRight } from "lucide-react";
 
 type Spec = { label: string; value: string };
 type SpecGroup = { group: string; specs: Spec[] };
@@ -98,7 +98,7 @@ const devices: Device[] = [
     description:
       "Nền tảng phần mềm phân tích kết quả DEXA/QUS tự động bằng AI, tích hợp bảng tính nguy cơ FRAX 10 năm và xuất báo cáo chẩn đoán theo chuẩn WHO.",
     badge: "Cloud-Ready",
-    svgColor: "#0369a1",
+    svgColor: "#0284c7",
     detailUrl: "/bao-gia?product=ai-suite",
     specGroups: [
       {
@@ -126,7 +126,7 @@ export default function EquipmentSection() {
   return (
     <section
       id="equipment"
-      className="py-20 bg-slate-50/50 dark:bg-slate-950/50 border-t border-slate-200/80 dark:border-slate-800"
+      className="py-20 bg-white dark:bg-[#0b0f17] border-t border-slate-200/80 dark:border-slate-800 transition-colors duration-200"
       aria-label="Danh mục thiết bị OsteoSys"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -138,10 +138,10 @@ export default function EquipmentSection() {
           transition={{ duration: 0.4 }}
           className="max-w-2xl mb-12 space-y-2"
         >
-          <span className="text-xs font-bold uppercase tracking-widest text-[#0284c7] dark:text-sky-400 font-mono-data">
+          <span className="text-xs font-bold uppercase tracking-widest text-[#0284c7] dark:text-cyan-400 font-mono-data">
             Danh Mục Thiết Bị &amp; Công Nghệ
           </span>
-          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">
+          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100">
             Giải Pháp Đo Loãng Xương Toàn Diện
           </h2>
           <p className="text-slate-600 dark:text-slate-300 text-xs sm:text-sm leading-relaxed">
@@ -159,12 +159,12 @@ export default function EquipmentSection() {
               viewport={{ once: true }}
               transition={{ delay: idx * 0.08, duration: 0.35 }}
               whileHover={{ y: -4, transition: { duration: 0.2 } }}
-              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm flex flex-col justify-between hover:border-[#0284c7] transition-all"
+              className="bg-slate-50/70 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-2xs flex flex-col justify-between hover:border-[#0284c7] dark:hover:border-cyan-500/40 dark:hover:shadow-[0_0_20px_rgba(6,182,212,0.12)] transition-all"
             >
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span
-                    className="text-xs font-mono-data font-bold uppercase tracking-wider px-2 py-0.5 rounded"
+                    className="text-xs font-mono-data font-bold uppercase tracking-wider px-2 py-0.5 rounded border border-transparent dark:border-cyan-800/40"
                     style={{ background: `${device.svgColor}15`, color: device.svgColor }}
                   >
                     {device.category}
@@ -175,10 +175,10 @@ export default function EquipmentSection() {
                 </div>
 
                 <div>
-                  <h3 className="font-bold text-slate-900 dark:text-white text-base">
+                  <h3 className="font-bold text-slate-900 dark:text-slate-100 text-base">
                     {device.name}
                   </h3>
-                  <p className="text-xs font-medium text-[#0284c7] dark:text-sky-400 mt-0.5">
+                  <p className="text-xs font-medium text-[#0284c7] dark:text-cyan-400 mt-0.5">
                     {device.tagline}
                   </p>
                 </div>
@@ -188,11 +188,11 @@ export default function EquipmentSection() {
                 </p>
               </div>
 
-              <div className="pt-6 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2 mt-4">
+              <div className="pt-6 border-t border-slate-200/60 dark:border-slate-800 flex items-center justify-between gap-2 mt-4">
                 <button
                   type="button"
                   onClick={() => setActiveDevice(device)}
-                  className="text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-[#0284c7] flex items-center gap-1 transition-colors"
+                  className="text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-[#0284c7] dark:hover:text-cyan-400 flex items-center gap-1 transition-colors"
                 >
                   <span>Xem thông số</span>
                   <ChevronRight size={13} />
@@ -201,7 +201,7 @@ export default function EquipmentSection() {
                 {device.detailUrl && (
                   <Link
                     href={device.detailUrl}
-                    className="text-xs font-bold text-[#0284c7] dark:text-sky-400 hover:underline flex items-center gap-0.5"
+                    className="text-xs font-bold text-[#0284c7] dark:text-cyan-400 hover:underline flex items-center gap-0.5"
                   >
                     <span>Chi tiết máy</span>
                     <ArrowRight size={12} />
@@ -222,7 +222,7 @@ export default function EquipmentSection() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setActiveDevice(null)}
-              className="fixed inset-0 bg-slate-950/40 backdrop-blur-xs cursor-pointer"
+              className="fixed inset-0 bg-slate-950/50 backdrop-blur-xs cursor-pointer"
             />
 
             <motion.div
@@ -235,10 +235,10 @@ export default function EquipmentSection() {
               {/* Header */}
               <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-start justify-between">
                 <div>
-                  <span className="text-xs font-mono-data font-bold uppercase tracking-wider text-[#0284c7]">
+                  <span className="text-xs font-mono-data font-bold uppercase tracking-wider text-[#0284c7] dark:text-cyan-400">
                     {activeDevice.category}
                   </span>
-                  <h3 className="text-lg font-bold text-slate-900 dark:text-white mt-1">
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mt-1">
                     {activeDevice.name}
                   </h3>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
@@ -283,7 +283,7 @@ export default function EquipmentSection() {
                 <Link
                   href={`/bao-gia?product=${activeDevice.id}`}
                   onClick={() => setActiveDevice(null)}
-                  className="flex-1 py-2.5 px-4 bg-[#0284c7] hover:bg-[#0369a1] text-white text-xs font-semibold rounded-md text-center shadow-sm"
+                  className="flex-1 py-2.5 px-4 bg-[#0284c7] hover:bg-[#0369a1] dark:bg-cyan-600 dark:hover:bg-cyan-500 text-white text-xs font-semibold rounded-md text-center shadow-sm"
                 >
                   Yêu Cầu Báo Giá Thiết Bị Này
                 </Link>

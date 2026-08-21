@@ -96,7 +96,7 @@ export interface Lead {
 }
 
 // 4. Partner Model (Clinics, Hospitals, Doctors)
-export type PartnerType = "hospital" | "clinic" | "enterprise" | "individual";
+export type PartnerType = "hospital" | "clinic" | "enterprise" | "doctor" | "individual";
 export type PartnerStatus = "active" | "inactive";
 
 export interface PartnerContact {

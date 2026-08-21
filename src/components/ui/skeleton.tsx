@@ -7,34 +7,30 @@ interface SkeletonBaseProps extends React.HTMLAttributes<HTMLDivElement> {
 export function Skeleton({ className = "", ...props }: SkeletonBaseProps) {
   return (
     <div
-      className={`animate-shimmer bg-slate-200/85 dark:bg-slate-800/90 rounded ${className}`}
+      className={`animate-shimmer bg-slate-200/80 dark:bg-slate-800/80 rounded ${className}`}
       {...props}
     />
   );
 }
 
 /**
- * Skeleton Metric KPI Card (Mirroring MetricCard: 48 units, 32 rented, 03 repairs, 28 clients)
+ * Skeleton Metric KPI Card
  * Exact dimensions matching real MetricCard for Zero CLS
  */
 export function SkeletonMetricCard() {
   return (
-    <div className="p-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-2xs flex flex-col justify-between h-[124px]">
+    <div className="p-5 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-lg shadow-2xs flex flex-col justify-between h-[124px]">
       <div className="flex items-start justify-between gap-3">
         <div className="space-y-2 flex-1">
-          {/* Title bar */}
           <Skeleton className="h-3.5 w-28" />
-          {/* Value + Subvalue */}
           <div className="flex items-baseline gap-2 pt-1">
             <Skeleton className="h-7 w-16 rounded-md" />
             <Skeleton className="h-3.5 w-20" />
           </div>
         </div>
-        {/* Icon box */}
         <Skeleton className="w-10 h-10 rounded-lg shrink-0" />
       </div>
 
-      {/* Bottom trend bar */}
       <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
         <Skeleton className="h-3 w-32" />
         <Skeleton className="h-3 w-12" />
@@ -44,7 +40,7 @@ export function SkeletonMetricCard() {
 }
 
 /**
- * Skeleton Data Table (Mirroring Data Tables with search bar, filters and rows)
+ * Skeleton Data Table
  */
 export function SkeletonDataTable({
   rows = 6,
@@ -54,8 +50,8 @@ export function SkeletonDataTable({
   columns?: number;
 }) {
   return (
-    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-5 shadow-2xs space-y-4">
-      {/* Toolbar: Search input + Action buttons */}
+    <div className="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-lg p-5 shadow-2xs space-y-4">
+      {/* Toolbar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
         <div className="flex items-center gap-2 flex-1 max-w-sm">
           <Skeleton className="h-8 w-full rounded-md" />
@@ -119,11 +115,11 @@ export function SkeletonDataTable({
 }
 
 /**
- * Skeleton Chart (Mirroring analytics distribution & telemetry charts)
+ * Skeleton Chart
  */
 export function SkeletonChart() {
   return (
-    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-5 shadow-2xs space-y-4 h-[280px] flex flex-col justify-between">
+    <div className="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-lg p-5 shadow-2xs space-y-4 h-[280px] flex flex-col justify-between">
       <div className="flex items-center justify-between">
         <div className="space-y-1">
           <Skeleton className="h-4 w-40" />
@@ -132,7 +128,6 @@ export function SkeletonChart() {
         <Skeleton className="h-6 w-20 rounded" />
       </div>
 
-      {/* Simulated vertical chart bars */}
       <div className="flex items-end justify-between gap-3 h-36 pt-4 border-b border-slate-100 dark:border-slate-800 px-2">
         <Skeleton className="w-8 h-20 rounded-t" />
         <Skeleton className="w-8 h-28 rounded-t" />
@@ -144,7 +139,6 @@ export function SkeletonChart() {
         <Skeleton className="w-8 h-30 rounded-t" />
       </div>
 
-      {/* X-axis labels */}
       <div className="flex items-center justify-between text-xs px-2">
         <Skeleton className="h-3 w-8" />
         <Skeleton className="h-3 w-8" />
@@ -160,11 +154,11 @@ export function SkeletonChart() {
 }
 
 /**
- * Skeleton Device Card (Mirroring Sonost 3000 inventory card: 48 machines)
+ * Skeleton Device Card
  */
 export function SkeletonDeviceCard() {
   return (
-    <div className="p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-2xs space-y-3 h-[180px] flex flex-col justify-between">
+    <div className="p-4 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-lg shadow-2xs space-y-3 h-[180px] flex flex-col justify-between">
       <div className="flex items-start justify-between gap-2">
         <div className="space-y-1.5 flex-1">
           <Skeleton className="h-4 w-28" />

@@ -27,7 +27,7 @@ export default function ClinicalSection() {
   return (
     <section
       id="clinical"
-      className="py-20 bg-white"
+      className="py-20 bg-white dark:bg-[#0b0f17] transition-colors duration-200"
       aria-label="Chuẩn lâm sàng OsteoSys"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -35,13 +35,13 @@ export default function ClinicalSection() {
 
           {/* Left — section label + headline */}
           <div className="lg:sticky lg:top-24">
-            <p className="text-xs font-medium uppercase tracking-widest text-[#0284c7] mb-3">
+            <p className="text-xs font-bold uppercase tracking-widest text-[#0284c7] dark:text-cyan-400 font-mono-data mb-3">
               Chuẩn lâm sàng
             </p>
-            <h2 className="text-2xl sm:text-3xl font-semibold text-slate-900 mb-4 text-balance">
+            <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100 mb-4 text-balance">
               Độ tin cậy được xây dựng trên tiêu chuẩn y tế quốc tế
             </h2>
-            <p className="text-slate-600 text-base leading-relaxed mb-6">
+            <p className="text-slate-600 dark:text-slate-300 text-xs sm:text-sm leading-relaxed mb-6">
               OsteoSys không chỉ cung cấp thiết bị — chúng tôi bảo đảm toàn bộ quy trình đo lường đạt chuẩn lâm sàng từ hiệu chuẩn đến báo cáo kết quả.
             </p>
 
@@ -51,7 +51,7 @@ export default function ClinicalSection() {
                 (badge) => (
                   <span
                     key={badge}
-                    className="px-3 py-1 border border-slate-200 text-xs font-mono-data font-medium text-slate-600 rounded bg-slate-50"
+                    className="px-3 py-1 border border-slate-200 dark:border-slate-800 text-xs font-mono-data font-medium text-slate-600 dark:text-slate-300 rounded bg-slate-50 dark:bg-slate-900"
                   >
                     {badge}
                   </span>
@@ -61,22 +61,22 @@ export default function ClinicalSection() {
           </div>
 
           {/* Right — standard cards */}
-          <div className="flex flex-col gap-px border border-slate-200 rounded overflow-hidden">
+          <div className="flex flex-col gap-px border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-2xs">
             {standards.map((s, i) => {
               const Icon = s.icon;
               return (
                 <div
                   key={s.title}
-                  className={`flex gap-5 p-6 bg-white hover:bg-slate-50 transition-colors ${
-                    i < standards.length - 1 ? "rule-b" : ""
+                  className={`flex gap-5 p-6 bg-white dark:bg-slate-900/80 hover:bg-slate-50 dark:hover:bg-slate-850 transition-colors ${
+                    i < standards.length - 1 ? "border-b border-slate-100 dark:border-slate-800" : ""
                   }`}
                 >
-                  <div className="shrink-0 w-9 h-9 rounded bg-[#0284c7]/10 flex items-center justify-center mt-0.5">
-                    <Icon size={17} className="text-[#0284c7]" strokeWidth={2} />
+                  <div className="shrink-0 w-9 h-9 rounded-lg bg-sky-50 dark:bg-cyan-950/70 border border-sky-100 dark:border-cyan-900/50 flex items-center justify-center mt-0.5">
+                    <Icon size={17} className="text-[#0284c7] dark:text-cyan-400" strokeWidth={2} />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-slate-900 text-sm mb-2">{s.title}</h3>
-                    <p className="text-sm text-slate-600 leading-relaxed">{s.body}</p>
+                    <h3 className="font-bold text-slate-900 dark:text-slate-100 text-sm mb-1.5">{s.title}</h3>
+                    <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">{s.body}</p>
                   </div>
                 </div>
               );

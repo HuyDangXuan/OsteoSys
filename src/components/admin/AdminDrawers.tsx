@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
@@ -8,21 +8,47 @@ import {
   Calendar,
   Building2,
   Radio,
-  FileText,
   DollarSign,
   Wrench,
   AlertTriangle,
   CheckCircle2,
   Loader2,
+  AlertCircle,
 } from "lucide-react";
 
+export interface RentalFormData {
+  partnerName: string;
+  partnerId?: string;
+  deviceSerial: string;
+  startDate: string;
+  durationMonths: string;
+  monthlyFee: string;
+  deposit: string;
+  packageType: string;
+  notes: string;
+}
+
+export interface AvailableDeviceOption {
+  serial: string;
+  model: string;
+  location: string;
+  year: number;
+}
+
+export interface PartnerOption {
+  id: string;
+  name: string;
+  type: string;
+  contactPerson: string;
+}
+
 /**
- * Slide-over Drawer: Thêm Hợp Đồng Thuê Máy Sonost 3000
+ * Slide-over Drawer: Thêm Hợp Đồng Thuê Máy Sonost 3000 (100% Dynamic DB Data)
  */
 interface CreateRentalDrawerProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess?: (contract: any) => void;
+  onSuccess?: (contract: unknown) => void;
 }
 
 export function CreateRentalDrawer({
@@ -31,18 +57,67 @@ export function CreateRentalDrawer({
   onSuccess,
 }: CreateRentalDrawerProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState({
+  const [isLoadingDevices, setIsLoadingDevices] = useState(false);
+  const [availableDevices, setAvailableDevices] = useState<AvailableDeviceOption[]>([]);
+  const [partners, setPartners] = useState<PartnerOption[]>([]);
+
+  const [formData, setFormData] = useState<RentalFormData>({
     partnerName: "",
-    deviceSerial: "OST-3000-8842",
+    partnerId: "",
+    deviceSerial: "",
     startDate: new Date().toISOString().split("T")[0],
     durationMonths: "6",
     monthlyFee: "15000000",
+    deposit: "30000000",
     packageType: "monthly",
     notes: "",
   });
 
+  // Fetch available devices and partners from DB when drawer opens
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const loadData = async () => {
+      setIsLoadingDevices(true);
+      try {
+        const [devicesRes, partnersRes] = await Promise.all([
+          fetch("/api/admin/devices?status=available", { cache: "no-store" }),
+          fetch("/api/admin/customers", { cache: "no-store" }),
+        ]);
+
+        const devicesJson = await devicesRes.json();
+        const partnersJson = await partnersRes.json();
+
+        if (devicesJson.status === "success" && Array.isArray(devicesJson.data)) {
+          setAvailableDevices(devicesJson.data);
+          if (devicesJson.data.length > 0 && !formData.deviceSerial) {
+            setFormData((prev) => ({
+              ...prev,
+              deviceSerial: devicesJson.data[0].serial,
+            }));
+          }
+        }
+
+        if (partnersJson.status === "success" && Array.isArray(partnersJson.data)) {
+          setPartners(partnersJson.data);
+        }
+      } catch (err) {
+        console.error("Failed to load available devices or partners:", err);
+      } finally {
+        setIsLoadingDevices(false);
+      }
+    };
+
+    loadData();
+  }, [isOpen]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.deviceSerial) {
+      alert("Vui lòng chọn thiết bị Sonost 3000 sẵn sàng.");
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const res = await fetch("/api/admin/rentals", {
@@ -62,6 +137,22 @@ export function CreateRentalDrawer({
       alert("Lỗi kết nối cơ sở dữ liệu");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handlePartnerSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedId = e.target.value;
+    if (selectedId === "custom") {
+      setFormData((prev) => ({ ...prev, partnerId: "", partnerName: "" }));
+    } else {
+      const found = partners.find((p) => p.id === selectedId);
+      if (found) {
+        setFormData((prev) => ({
+          ...prev,
+          partnerId: found.id,
+          partnerName: found.name,
+        }));
+      }
     }
   };
 
@@ -95,7 +186,7 @@ export function CreateRentalDrawer({
                   Tạo Hợp Đồng Thuê Sonost 3000
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                  Khởi tạo hợp đồng thuê máy đo mật độ xương gót chân B2B.
+                  Dữ liệu MongoDB: cấp phát máy sẵn sàng và đồng bộ trạng thái.
                 </p>
               </div>
               <button
@@ -109,11 +200,33 @@ export function CreateRentalDrawer({
 
             {/* Form Body */}
             <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-5 space-y-4 text-xs">
-              <div className="space-y-1">
-                <label className="font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                  <Building2 size={14} className="text-[#0284c7]" />
-                  Cơ sở Y tế / Bệnh viện đối tác <span className="text-rose-500">*</span>
+              {/* Partner selection or custom name */}
+              <div className="space-y-1.5">
+                <label className="font-semibold text-slate-700 dark:text-slate-300 flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <Building2 size={14} className="text-[#0284c7]" />
+                    Cơ sở Y tế / Bệnh viện đối tác <span className="text-rose-500">*</span>
+                  </span>
                 </label>
+
+                {partners.length > 0 && (
+                  <select
+                    onChange={handlePartnerSelect}
+                    defaultValue=""
+                    className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md outline-none focus:border-[#0284c7] text-xs mb-1.5"
+                  >
+                    <option value="" disabled>
+                      -- Chọn nhanh từ danh sách Đối tác có sẵn --
+                    </option>
+                    {partners.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name} ({p.contactPerson || p.type})
+                      </option>
+                    ))}
+                    <option value="custom">✍️ Nhập tên cơ sở y tế mới...</option>
+                  </select>
+                )}
+
                 <input
                   type="text"
                   required
@@ -124,20 +237,61 @@ export function CreateRentalDrawer({
                 />
               </div>
 
+              {/* Dynamic Device Serial Selector */}
+              <div className="space-y-1.5">
+                <label className="font-semibold text-slate-700 dark:text-slate-300 flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <Radio size={14} className="text-[#0284c7]" />
+                    Chọn máy Sonost 3000 sẵn sàng kho <span className="text-rose-500">*</span>
+                  </span>
+                  <span className="font-mono-data text-sky-600 dark:text-sky-400 font-bold">
+                    {availableDevices.length} máy sẵn sàng
+                  </span>
+                </label>
+
+                {isLoadingDevices ? (
+                  <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded border border-slate-200 dark:border-slate-700 flex items-center gap-2 text-slate-500">
+                    <Loader2 size={14} className="animate-spin text-[#0284c7]" />
+                    <span>Đang tải danh sách máy sẵn sàng từ MongoDB...</span>
+                  </div>
+                ) : availableDevices.length === 0 ? (
+                  <div className="p-3 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 rounded text-rose-700 dark:text-rose-400 flex items-start gap-2">
+                    <AlertTriangle size={16} className="shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-semibold">Hết máy sẵn sàng trong kho</p>
+                      <p className="text-xs mt-0.5">
+                        Tất cả các máy đang trong hợp đồng thuê hoặc đang bảo trì. Vui lòng hoàn tất hợp đồng cũ hoặc kiểm chuẩn lại thiết bị trong kho trước khi tạo hợp đồng mới.
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <select
+                    value={formData.deviceSerial}
+                    onChange={(e) => setFormData({ ...formData, deviceSerial: e.target.value })}
+                    className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md outline-none focus:border-[#0284c7] font-mono-data"
+                  >
+                    {availableDevices.map((dev) => (
+                      <option key={dev.serial} value={dev.serial}>
+                        #{dev.serial} — {dev.model} ({dev.location})
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
+
+              {/* Rental package type */}
               <div className="space-y-1">
-                <label className="font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                  <Radio size={14} className="text-[#0284c7]" />
-                  Chọn máy Sonost 3000 sẵn sàng <span className="text-rose-500">*</span>
+                <label className="font-semibold text-slate-700 dark:text-slate-300">
+                  Gói dịch vụ cho thuê
                 </label>
                 <select
-                  value={formData.deviceSerial}
-                  onChange={(e) => setFormData({ ...formData, deviceSerial: e.target.value })}
+                  value={formData.packageType}
+                  onChange={(e) => setFormData({ ...formData, packageType: e.target.value })}
                   className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md outline-none focus:border-[#0284c7]"
                 >
-                  <option value="OST-3000-8842">Sonost 3000 PRO — OST-3000-8842 (Kho Tổng Hà Nội)</option>
-                  <option value="OST-3000-8835">Sonost 3000 — OST-3000-8835 (Kho Tổng Hà Nội)</option>
-                  <option value="OST-3000-8838">Sonost 3000 PRO — OST-3000-8838 (Kho TP.HCM)</option>
-                  <option value="OST-3000-8840">Sonost 3000 PRO — OST-3000-8840 (Kho TP.HCM)</option>
+                  <option value="monthly">Thuê tháng tiêu chuẩn (Phòng khám / BV)</option>
+                  <option value="long_term">Thuê dài hạn &gt; 12 tháng (Ưu đãi bảo trì)</option>
+                  <option value="daily_event">Thuê theo ngày / sự kiện tầm soát lưu động</option>
                 </select>
               </div>
 
@@ -171,17 +325,30 @@ export function CreateRentalDrawer({
                 </div>
               </div>
 
-              <div className="space-y-1">
-                <label className="font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                  <DollarSign size={14} className="text-emerald-600" />
-                  Đơn giá thuê hàng tháng (VNĐ)
-                </label>
-                <input
-                  type="number"
-                  value={formData.monthlyFee}
-                  onChange={(e) => setFormData({ ...formData, monthlyFee: e.target.value })}
-                  className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md outline-none focus:border-[#0284c7] font-mono-data"
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                    <DollarSign size={14} className="text-emerald-600" />
+                    Đơn giá thuê / tháng (VNĐ)
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.monthlyFee}
+                    onChange={(e) => setFormData({ ...formData, monthlyFee: e.target.value })}
+                    className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md outline-none focus:border-[#0284c7] font-mono-data"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="font-semibold text-slate-700 dark:text-slate-300">
+                    Tiền đặt cọc máy (VNĐ)
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.deposit}
+                    onChange={(e) => setFormData({ ...formData, deposit: e.target.value })}
+                    className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md outline-none focus:border-[#0284c7] font-mono-data"
+                  />
+                </div>
               </div>
 
               <div className="space-y-1">
@@ -208,8 +375,8 @@ export function CreateRentalDrawer({
                 </button>
                 <button
                   type="submit"
-                  disabled={isSubmitting}
-                  className="w-2/3 py-2.5 px-3 bg-[#0284c7] hover:bg-[#0369a1] text-white rounded-md font-semibold transition-all flex items-center justify-center gap-1.5 disabled:opacity-70"
+                  disabled={isSubmitting || availableDevices.length === 0}
+                  className="w-2/3 py-2.5 px-3 bg-[#0284c7] hover:bg-[#0369a1] text-white rounded-md font-semibold transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isSubmitting ? (
                     <>
@@ -238,7 +405,7 @@ export function CreateRentalDrawer({
 interface CreateRepairModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess?: (ticket: any) => void;
+  onSuccess?: (ticket: unknown) => void;
 }
 
 export function CreateRepairModal({
@@ -247,14 +414,34 @@ export function CreateRepairModal({
   onSuccess,
 }: CreateRepairModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [devices, setDevices] = useState<{ serial: string; model: string; location: string }[]>([]);
   const [formData, setFormData] = useState({
-    deviceSerial: "OST-3000-8845",
+    deviceSerial: "",
     reportedIssue: "",
     priority: "urgent",
-    partnerName: "Bệnh viện Đa khoa Hà Đông",
+    partnerName: "Phòng Kiểm Chuẩn Kỹ Thuật (Kho Tổng)",
     technicianName: "Kỹ sư Nguyễn Văn Tuấn",
     estimatedDays: "2",
   });
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const fetchAllDevices = async () => {
+      try {
+        const res = await fetch("/api/admin/devices", { cache: "no-store" });
+        const json = await res.json();
+        if (json.status === "success" && Array.isArray(json.data)) {
+          setDevices(json.data);
+          if (json.data.length > 0 && !formData.deviceSerial) {
+            setFormData((prev) => ({ ...prev, deviceSerial: json.data[0].serial }));
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load devices for repair modal:", err);
+      }
+    };
+    fetchAllDevices();
+  }, [isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -329,12 +516,13 @@ export function CreateRepairModal({
                 <select
                   value={formData.deviceSerial}
                   onChange={(e) => setFormData({ ...formData, deviceSerial: e.target.value })}
-                  className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md outline-none focus:border-[#0284c7]"
+                  className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md outline-none focus:border-[#0284c7] font-mono-data"
                 >
-                  <option value="OST-3000-8845">Sonost 3000 — OST-3000-8845 (Kho Tổng)</option>
-                  <option value="OST-3000-8846">Sonost 3000 PRO — OST-3000-8846 (Kho Kỹ Thuật)</option>
-                  <option value="OST-3000-8847">Sonost 3000 — OST-3000-8847 (BV Đa khoa Hà Đông)</option>
-                  <option value="OST-3000-8848">Sonost 3000 PRO — OST-3000-8848 (PK An Khang)</option>
+                  {devices.map((d) => (
+                    <option key={d.serial} value={d.serial}>
+                      #{d.serial} — {d.model} ({d.location})
+                    </option>
+                  ))}
                 </select>
               </div>
 

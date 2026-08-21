@@ -5,13 +5,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import {
   ChevronRight,
-  Download,
   Radio,
-  ShieldCheck,
-  Zap,
-  Printer,
-  Activity,
-  ArrowRight,
 } from "lucide-react";
 
 const SCAN_METRICS = [
@@ -24,10 +18,13 @@ export default function HeroSection() {
   return (
     <section
       id="hero"
-      className="pt-20 min-h-[calc(100svh-80px)] flex items-center bg-white dark:bg-slate-950"
+      className="pt-20 min-h-[calc(100svh-80px)] flex items-center bg-slate-50 dark:bg-[#0b0f17] transition-colors duration-200 relative overflow-hidden"
       aria-label="Giới thiệu Máy đo loãng xương Sonost 3000"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full py-12 lg:py-20">
+      {/* Background Radial Teal Glow in Dark Mode */}
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[500px] bg-sky-400/5 dark:bg-cyan-500/10 blur-[130px] rounded-full pointer-events-none" />
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full py-12 lg:py-20 relative z-10">
         <div className="grid lg:grid-cols-[55fr_45fr] gap-12 lg:gap-16 items-center">
           {/* Left: Headline + Clinical Value Props + CTAs */}
           <motion.div
@@ -38,16 +35,16 @@ export default function HeroSection() {
           >
             {/* Overline Badge */}
             <div className="flex items-center gap-2">
-              <div className="h-px w-8 bg-[#0284c7]" />
-              <span className="text-xs font-bold uppercase tracking-widest text-[#0284c7] dark:text-sky-400 font-mono-data">
+              <div className="h-px w-8 bg-[#0284c7] dark:bg-cyan-400" />
+              <span className="text-xs font-bold uppercase tracking-widest text-[#0284c7] dark:text-cyan-400 font-mono-data">
                 Máy Đo Loãng Xương Siêu Âm Y Khoa
               </span>
             </div>
 
             {/* Headline */}
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-[1.15] text-slate-900 dark:text-white tracking-tight">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-[1.15] text-slate-900 dark:text-slate-100 tracking-tight">
               Chẩn đoán loãng xương chuẩn xác.{" "}
-              <span className="text-[#0284c7] dark:text-sky-400 block sm:inline">
+              <span className="text-[#0284c7] dark:text-cyan-400 block sm:inline">
                 An toàn tuyệt đối 0% tia X.
               </span>
             </h1>
@@ -62,7 +59,7 @@ export default function HeroSection() {
               <motion.div whileTap={{ scale: 0.98 }}>
                 <Link
                   href="/bao-gia"
-                  className="flex items-center justify-center gap-2 px-5 py-3 bg-[#0284c7] hover:bg-[#0369a1] text-white text-xs font-bold uppercase tracking-wider rounded-md transition-colors shadow-sm"
+                  className="flex items-center justify-center gap-2 px-5 py-3 bg-[#0284c7] hover:bg-[#0369a1] dark:bg-cyan-600 dark:hover:bg-cyan-500 text-white text-xs font-bold uppercase tracking-wider rounded-md transition-colors shadow-sm"
                 >
                   <span>Nhận Báo Giá &amp; Tư Vấn Thuê Máy</span>
                   <ChevronRight size={15} />
@@ -72,16 +69,16 @@ export default function HeroSection() {
               <motion.div whileTap={{ scale: 0.98 }}>
                 <Link
                   href="/san-pham/sonost-3000"
-                  className="flex items-center justify-center gap-2 px-5 py-3 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-md hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors"
+                  className="flex items-center justify-center gap-2 px-5 py-3 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-md hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors"
                 >
-                  <Radio size={14} className="text-[#0284c7]" />
+                  <Radio size={14} className="text-[#0284c7] dark:text-cyan-400" />
                   <span>Xem Chi Tiết Sonost 3000</span>
                 </Link>
               </motion.div>
             </div>
 
             {/* 3 Quick Data Rows */}
-            <div className="border border-slate-200 dark:border-slate-800 rounded-lg divide-y divide-slate-100 dark:divide-slate-800 bg-slate-50/50 dark:bg-slate-900/50 text-xs">
+            <div className="border border-slate-200 dark:border-slate-800 rounded-lg divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-slate-900/80 backdrop-blur-xs text-xs shadow-2xs">
               {[
                 { metric: "Độ chính xác lặp lại (CV)", value: "< 1.5 %", note: "Chuẩn ISCD & WHO quốc tế" },
                 { metric: "Thời gian thực hiện phép đo", value: "< 15 giây", note: "Nhanh gấp 4 lần phương pháp truyền thống" },
@@ -89,13 +86,13 @@ export default function HeroSection() {
               ].map((row) => (
                 <div
                   key={row.metric}
-                  className="flex items-center justify-between px-4 py-2.5 hover:bg-slate-100/60 dark:hover:bg-slate-800/60 transition-colors"
+                  className="flex items-center justify-between px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
                 >
                   <div>
                     <span className="font-semibold text-slate-800 dark:text-slate-200">{row.metric}</span>
                     <span className="text-slate-400 text-xs ml-2 hidden sm:inline">({row.note})</span>
                   </div>
-                  <span className="font-mono-data font-bold text-[#0284c7] dark:text-sky-400 text-sm">
+                  <span className="font-mono-data font-bold text-[#0284c7] dark:text-cyan-400 text-sm">
                     {row.value}
                   </span>
                 </div>
@@ -111,7 +108,7 @@ export default function HeroSection() {
             className="relative"
           >
             <div
-              className="relative bg-slate-950 rounded-xl overflow-hidden shadow-2xl border border-slate-800"
+              className="relative bg-[#070d17] dark:bg-[#070d17] rounded-xl overflow-hidden shadow-2xl border border-slate-800 dark:border-slate-800/80"
               style={{ aspectRatio: "4/3" }}
               aria-label="Hình ảnh mô phỏng máy đo loãng xương Sonost 3000"
             >
@@ -119,19 +116,19 @@ export default function HeroSection() {
               <Sonost3DExhibit />
 
               {/* Floating Clinical Data Overlay */}
-              <div className="absolute bottom-3 left-3 right-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-slate-200 dark:border-slate-800 rounded-lg p-3 shadow-lg">
+              <div className="absolute bottom-3 left-3 right-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-lg p-3 shadow-lg">
                 <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-xs uppercase tracking-widest text-slate-400 font-bold font-mono-data">
+                  <span className="text-xs uppercase tracking-widest text-slate-400 dark:text-slate-400 font-bold font-mono-data">
                     Phiếu Đo Mẫu · Kết Quả Trực Quan
                   </span>
-                  <span className="text-xs font-mono-data font-bold px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
+                  <span className="text-xs font-mono-data font-bold px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-400 border border-transparent dark:border-emerald-800/50">
                     Bình Thường (Normal)
                   </span>
                 </div>
                 <div className="grid grid-cols-3 gap-2">
                   {SCAN_METRICS.map((m) => (
                     <div key={m.label} className="border-r border-slate-100 dark:border-slate-800 last:border-0 pr-2">
-                      <p className="font-mono-data tabular-nums text-base font-bold text-[#0284c7] dark:text-sky-400 leading-none">
+                      <p className="font-mono-data tabular-nums text-base font-bold text-[#0284c7] dark:text-cyan-400 leading-none">
                         {m.value}
                         <span className="text-xs font-normal text-slate-400 ml-0.5">{m.unit}</span>
                       </p>
@@ -143,7 +140,7 @@ export default function HeroSection() {
 
               {/* Top Certificate Badges */}
               <div className="absolute top-3 right-3 flex items-center gap-1.5">
-                <span className="text-xs font-mono-data font-bold px-2 py-0.5 bg-slate-900/90 text-sky-300 border border-sky-700/60 rounded">
+                <span className="text-xs font-mono-data font-bold px-2 py-0.5 bg-slate-900/90 text-cyan-300 border border-cyan-700/60 rounded shadow-xs">
                   ISCD · WHO Compliant
                 </span>
               </div>
@@ -151,7 +148,7 @@ export default function HeroSection() {
 
             {/* Sub note */}
             <div className="mt-3 flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-[#0284c7] animate-pulse" />
+              <div className="w-2 h-2 rounded-full bg-[#0284c7] dark:bg-cyan-400 animate-pulse" />
               <p className="text-xs text-slate-500 dark:text-slate-400">
                 Thiết bị tích hợp máy in nhiệt in kết quả và đồ thị phân loại ngay sau khi đo.
               </p>
@@ -168,10 +165,10 @@ export default function HeroSection() {
           className="mt-12 pt-8 border-t border-slate-200 dark:border-slate-800"
         >
           <div className="text-center mb-6 space-y-1">
-            <span className="text-xs font-bold text-[#0284c7] uppercase tracking-wider font-mono-data">
+            <span className="text-xs font-bold text-[#0284c7] dark:text-cyan-400 uppercase tracking-wider font-mono-data">
               Quy Trình Đo Khám Nhanh
             </span>
-            <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
+            <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100">
               4 Bước Thực Hiện Phép Đo Mật Độ Xương Trên Sonost 3000
             </h3>
           </div>
@@ -185,10 +182,10 @@ export default function HeroSection() {
             ].map((s, idx) => (
               <div
                 key={idx}
-                className="p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg space-y-1.5"
+                className="p-4 bg-white dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800/80 rounded-lg space-y-1.5 shadow-2xs hover:border-slate-300 dark:hover:border-slate-700 transition-colors"
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-mono-data font-bold px-2 py-0.5 bg-sky-100 dark:bg-sky-950 text-[#0284c7] rounded">
+                  <span className="text-xs font-mono-data font-bold px-2 py-0.5 bg-sky-100 dark:bg-cyan-950/70 text-[#0284c7] dark:text-cyan-400 rounded border border-transparent dark:border-cyan-800/40">
                     Bước {s.step}
                   </span>
                 </div>
@@ -207,13 +204,13 @@ export default function HeroSection() {
 function Sonost3DExhibit() {
   return (
     <svg viewBox="0 0 800 600" className="w-full h-full" aria-hidden="true" role="img">
-      <rect width="800" height="600" fill="#080e1a" />
+      <rect width="800" height="600" fill="#070d17" />
       {/* Ultrasound Transducer Cone Waves */}
       <defs>
         <radialGradient id="waveGlow" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#0284c7" stopOpacity="0.4" />
-          <stop offset="70%" stopColor="#0369a1" stopOpacity="0.1" />
-          <stop offset="100%" stopColor="#080e1a" stopOpacity="0" />
+          <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.4" />
+          <stop offset="70%" stopColor="#0284c7" stopOpacity="0.1" />
+          <stop offset="100%" stopColor="#070d17" stopOpacity="0" />
         </radialGradient>
       </defs>
 

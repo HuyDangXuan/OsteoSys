@@ -54,7 +54,7 @@ export default function CommandPalette() {
       subtitle: "Hợp đồng thuê, lịch bàn giao & thanh toán Sonost 3000",
       href: "/admin/thue-may",
       icon: CalendarCheck,
-      badge: "12 đang chạy",
+      badge: "HĐ đang chạy",
     },
     {
       id: "nav-repairs",
@@ -63,7 +63,7 @@ export default function CommandPalette() {
       subtitle: "Tiếp nhận sự cố, hiệu chuẩn đầu dò ultrasound, bảo dưỡng định kỳ",
       href: "/admin/sua-chua",
       icon: Wrench,
-      badge: "3 đang xử lý",
+      badge: "Kanban Board",
     },
     {
       id: "nav-inventory",
@@ -72,7 +72,6 @@ export default function CommandPalette() {
       subtitle: "Danh sách máy Sonost 3000, đầu dò, phantom hiệu chuẩn, giấy in nhiệt",
       href: "/admin/kho-thiet-bi",
       icon: Boxes,
-      badge: "48 máy",
     },
     {
       id: "nav-customers",
@@ -97,7 +96,7 @@ export default function CommandPalette() {
       category: "Thao tác nhanh",
       title: "Tạo hợp đồng thuê máy mới",
       subtitle: "Xuất phiếu bàn giao Sonost 3000 và tính toán biểu phí",
-      href: "/admin/thue-may?action=new",
+      href: "/admin/thue-may",
       icon: PlusCircle,
       badge: "Phím tắt: N",
     },
@@ -106,7 +105,7 @@ export default function CommandPalette() {
       category: "Thao tác nhanh",
       title: "Tạo phiếu tiếp nhận sửa chữa / hiệu chuẩn",
       subtitle: "Ghi nhận lỗi đầu dò, nguồn phát hoặc kiểm chuẩn SOS/BUA",
-      href: "/admin/sua-chua?action=new",
+      href: "/admin/sua-chua",
       icon: Activity,
     },
     {
@@ -114,7 +113,7 @@ export default function CommandPalette() {
       category: "Thao tác nhanh",
       title: "Xuất báo cáo doanh thu & thiết bị tháng",
       subtitle: "File Excel / PDF tổng hợp theo chuẩn y tế",
-      href: "/admin/thue-may?export=true",
+      href: "/admin/thue-may",
       icon: FileText,
     },
 
@@ -136,14 +135,6 @@ export default function CommandPalette() {
       href: "/admin/kho-thiet-bi?search=OST-3000-7719",
       icon: Boxes,
       badge: "Sẵn sàng",
-    },
-    {
-      id: "customer-bv-bachmai",
-      category: "Hợp đồng & Khách hàng",
-      title: "Bệnh viện Bạch Mai - Khoa Cơ Xương Khớp",
-      subtitle: "02 máy Sonost 3000 • Hợp đồng #HD-2026-088",
-      href: "/admin/khach-hang?id=bach-mai",
-      icon: Users,
     },
   ];
 
@@ -190,11 +181,11 @@ export default function CommandPalette() {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center pt-16 sm:pt-24 px-4 bg-slate-900/60 backdrop-blur-sm transition-opacity"
+      className="fixed inset-0 z-50 flex items-start justify-center pt-16 sm:pt-24 px-4 bg-slate-950/60 backdrop-blur-sm transition-opacity"
       onClick={() => setCommandPaletteOpen(false)}
     >
       <div
-        className="w-full max-w-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-2xl overflow-hidden flex flex-col max-h-[80vh] animate-in fade-in zoom-in-95 duration-150"
+        className="w-full max-w-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh] animate-in fade-in zoom-in-95 duration-150"
         onClick={(e) => e.stopPropagation()}
         onKeyDown={handleKeyDown}
       >
@@ -210,7 +201,7 @@ export default function CommandPalette() {
               setSelectedIndex(0);
             }}
             placeholder="Tìm kiếm máy Sonost 3000, hợp đồng, phiếu sửa chữa, khách hàng... (Cmd+K)"
-            className="flex-1 bg-transparent border-none text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 text-sm focus:outline-none"
+            className="flex-1 bg-transparent border-none text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 text-xs sm:text-sm focus:outline-none"
           />
           {query && (
             <button
@@ -220,8 +211,8 @@ export default function CommandPalette() {
               <X size={14} />
             </button>
           )}
-          <span className="hidden sm:inline-block px-1.5 py-0.5 text-xs font-mono-data bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded border border-slate-200 dark:border-slate-700">
-            ESC để đóng
+          <span className="hidden sm:inline-block px-1.5 py-0.5 text-[11px] font-mono-data bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded border border-slate-200 dark:border-slate-700">
+            ESC
           </span>
         </div>
 
@@ -230,7 +221,7 @@ export default function CommandPalette() {
           {filteredItems.length === 0 ? (
             <div className="py-12 text-center">
               <Search size={32} className="mx-auto text-slate-300 dark:text-slate-600 mb-2" />
-              <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+              <p className="text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300">
                 Không tìm thấy kết quả cho &ldquo;{query}&rdquo;
               </p>
               <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
@@ -246,17 +237,17 @@ export default function CommandPalette() {
                   key={item.id}
                   onClick={() => handleSelect(item)}
                   onMouseEnter={() => setSelectedIndex(index)}
-                  className={`flex items-center justify-between gap-3 px-3 py-2.5 rounded cursor-pointer transition-colors ${
+                  className={`flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-colors ${
                     isSelected
-                      ? "bg-sky-50 dark:bg-sky-950/40 text-sky-950 dark:text-sky-100"
-                      : "hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-700 dark:text-slate-300"
+                      ? "bg-sky-50 dark:bg-cyan-950/40 text-slate-900 dark:text-cyan-200 border border-sky-200 dark:border-cyan-800/50"
+                      : "hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-700 dark:text-slate-300 border border-transparent"
                   }`}
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <div
                       className={`w-8 h-8 rounded flex items-center justify-center shrink-0 ${
                         isSelected
-                          ? "bg-[#0284c7] text-white"
+                          ? "bg-[#0284c7] dark:bg-cyan-600 text-white"
                           : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"
                       }`}
                     >
@@ -264,25 +255,25 @@ export default function CommandPalette() {
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium truncate">{item.title}</span>
+                        <span className="text-xs font-semibold truncate">{item.title}</span>
                         {item.badge && (
-                          <span className="text-xs font-mono-data px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 shrink-0">
+                          <span className="text-[10px] font-mono-data px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 shrink-0">
                             {item.badge}
                           </span>
                         )}
                       </div>
                       {item.subtitle && (
-                        <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
                           {item.subtitle}
                         </p>
                       )}
                     </div>
                   </div>
                   <div className="flex items-center gap-1.5 shrink-0 text-slate-400">
-                    <span className="text-xs uppercase tracking-wider font-mono-data opacity-60">
+                    <span className="text-[10px] uppercase tracking-wider font-mono-data opacity-60">
                       {item.category}
                     </span>
-                    {isSelected && <ArrowRight size={14} className="text-[#0284c7]" />}
+                    {isSelected && <ArrowRight size={14} className="text-[#0284c7] dark:text-cyan-400" />}
                   </div>
                 </div>
               );
@@ -291,25 +282,25 @@ export default function CommandPalette() {
         </div>
 
         {/* Footer shortcuts */}
-        <div className="px-4 py-2.5 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+        <div className="px-4 py-2.5 bg-slate-50 dark:bg-[#0b0f17] border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
           <div className="flex items-center gap-3">
-            <span className="flex items-center gap-1">
-              <kbd className="px-1.5 py-0.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded text-xs">
+            <span className="flex items-center gap-1 text-[11px]">
+              <kbd className="px-1.5 py-0.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded text-[10px]">
                 ↑
               </kbd>
-              <kbd className="px-1.5 py-0.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded text-xs">
+              <kbd className="px-1.5 py-0.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded text-[10px]">
                 ↓
               </kbd>{" "}
               Di chuyển
             </span>
-            <span className="flex items-center gap-1">
-              <kbd className="px-1.5 py-0.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded text-xs">
+            <span className="flex items-center gap-1 text-[11px]">
+              <kbd className="px-1.5 py-0.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded text-[10px]">
                 Enter
               </kbd>{" "}
               Chọn
             </span>
           </div>
-          <span className="flex items-center gap-1 text-[#0284c7]">
+          <span className="flex items-center gap-1 text-[#0284c7] dark:text-cyan-400 text-xs font-medium">
             <Sparkles size={12} /> Sonost 3000 Quick Search
           </span>
         </div>

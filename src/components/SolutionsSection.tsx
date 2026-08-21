@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, ChevronRight, CalendarCheck, ShieldCheck, Building2, Users } from "lucide-react";
+import { Check, ChevronRight } from "lucide-react";
 
 const tabs = [
   { id: "clinic", label: "Phòng Khám & Bệnh Viện" },
@@ -112,7 +112,7 @@ export default function SolutionsSection() {
   return (
     <section
       id="solutions"
-      className="py-20 bg-slate-50/70 dark:bg-slate-950/70 border-y border-slate-200/80 dark:border-slate-800"
+      className="py-20 bg-slate-50/70 dark:bg-[#0b0f17] border-y border-slate-200/80 dark:border-slate-800 transition-colors duration-200"
       aria-label="Giải pháp B2B OsteoSys"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -124,10 +124,10 @@ export default function SolutionsSection() {
           transition={{ duration: 0.4 }}
           className="max-w-2xl mb-10 space-y-2"
         >
-          <span className="text-xs font-bold uppercase tracking-widest text-[#0284c7] dark:text-sky-400 font-mono-data">
+          <span className="text-xs font-bold uppercase tracking-widest text-[#0284c7] dark:text-cyan-400 font-mono-data">
             Giải Pháp B2B Chuyên Nghiệp
           </span>
-          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">
+          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100">
             Gói Giải Pháp Theo Đối Tượng Khách Hàng
           </h2>
           <p className="text-slate-600 dark:text-slate-300 text-xs sm:text-sm leading-relaxed">
@@ -150,7 +150,7 @@ export default function SolutionsSection() {
               {activeTab === tab.id && (
                 <motion.div
                   layoutId="activeSolutionTab"
-                  className="absolute inset-0 bg-[#0284c7] rounded-md shadow-xs"
+                  className="absolute inset-0 bg-[#0284c7] dark:bg-cyan-600 rounded-md shadow-xs"
                   transition={{ type: "spring", stiffness: 400, damping: 30 }}
                 />
               )}
@@ -169,19 +169,19 @@ export default function SolutionsSection() {
             transition={{ duration: 0.25 }}
             className="grid md:grid-cols-3 gap-6 items-stretch"
           >
-            {packages.map((pkg, idx) => (
+            {packages.map((pkg) => (
               <motion.div
                 key={pkg.name}
                 whileHover={{ y: -4, transition: { duration: 0.2 } }}
-                className={`relative flex flex-col bg-white dark:bg-slate-900 border rounded-xl p-6 shadow-sm transition-all justify-between ${
+                className={`relative flex flex-col bg-white dark:bg-slate-900/90 border rounded-xl p-6 shadow-2xs transition-all justify-between ${
                   "highlight" in pkg && pkg.highlight
-                    ? "border-[#0284c7] ring-2 ring-[#0284c7]/20 shadow-md"
-                    : "border-slate-200 dark:border-slate-800 hover:border-slate-300"
+                    ? "border-[#0284c7] dark:border-cyan-500/60 ring-2 ring-[#0284c7]/20 dark:ring-cyan-500/20 shadow-md dark:shadow-[0_0_25px_rgba(6,182,212,0.15)]"
+                    : "border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700"
                 }`}
               >
                 {"badge" in pkg && pkg.badge && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <span className="px-3 py-0.5 bg-[#0284c7] text-white text-xs font-bold uppercase tracking-wider rounded-full shadow-sm">
+                    <span className="px-3 py-0.5 bg-[#0284c7] dark:bg-cyan-600 text-white text-xs font-bold uppercase tracking-wider rounded-full shadow-sm">
                       {pkg.badge}
                     </span>
                   </div>
@@ -189,7 +189,7 @@ export default function SolutionsSection() {
 
                 <div className="space-y-3">
                   <div>
-                    <h3 className="font-bold text-slate-900 dark:text-white text-base">
+                    <h3 className="font-bold text-slate-900 dark:text-slate-100 text-base">
                       {pkg.name}
                     </h3>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
@@ -198,7 +198,7 @@ export default function SolutionsSection() {
                   </div>
 
                   <div className="py-2.5 border-y border-slate-100 dark:border-slate-800">
-                    <p className="font-mono-data text-base font-bold text-[#0284c7] dark:text-sky-400">
+                    <p className="font-mono-data text-base font-bold text-[#0284c7] dark:text-cyan-400">
                       {pkg.price}
                     </p>
                   </div>
@@ -206,7 +206,7 @@ export default function SolutionsSection() {
                   <ul className="space-y-2 text-xs">
                     {pkg.items.map((item, i) => (
                       <li key={i} className="flex items-start gap-2 text-slate-700 dark:text-slate-300">
-                        <Check size={14} className="text-[#0284c7] shrink-0 mt-0.5" />
+                        <Check size={14} className="text-[#0284c7] dark:text-cyan-400 shrink-0 mt-0.5" />
                         <span>{item}</span>
                       </li>
                     ))}
@@ -218,8 +218,8 @@ export default function SolutionsSection() {
                     href={pkg.link}
                     className={`w-full flex items-center justify-center gap-1.5 py-2.5 px-4 text-xs font-semibold rounded-md transition-colors ${
                       "highlight" in pkg && pkg.highlight
-                        ? "bg-[#0284c7] text-white hover:bg-[#0369a1] shadow-sm"
-                        : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200"
+                        ? "bg-[#0284c7] hover:bg-[#0369a1] dark:bg-cyan-600 dark:hover:bg-cyan-500 text-white shadow-sm"
+                        : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700"
                     }`}
                   >
                     <span>{pkg.cta}</span>

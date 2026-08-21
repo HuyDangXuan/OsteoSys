@@ -72,7 +72,7 @@ export function CardGridSkeleton({ count = 3 }: { count?: number }) {
       {Array.from({ length: count }).map((_, i) => (
         <div
           key={i}
-          className="p-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg space-y-4"
+          className="p-5 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-lg space-y-4 shadow-2xs"
         >
           <div className="flex justify-between items-center">
             <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-16" />
@@ -125,7 +125,7 @@ export function TableEmptyState({
     <div className="py-16 px-4 text-center flex flex-col items-center justify-center max-w-md mx-auto animate-in fade-in duration-200">
       {/* Icon Illustration */}
       <div className="relative mb-4">
-        <div className="w-16 h-16 rounded-full bg-sky-50 dark:bg-sky-950/60 border border-sky-100 dark:border-sky-900/60 flex items-center justify-center text-[#0284c7] dark:text-sky-400">
+        <div className="w-16 h-16 rounded-full bg-sky-50 dark:bg-cyan-950/60 border border-sky-100 dark:border-cyan-900/60 flex items-center justify-center text-[#0284c7] dark:text-cyan-400">
           <Search size={28} strokeWidth={1.75} />
         </div>
         <span className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-amber-100 dark:bg-amber-950 border-2 border-white dark:border-slate-900 flex items-center justify-center text-amber-600 dark:text-amber-400 text-xs font-bold font-mono-data">
@@ -156,7 +156,7 @@ export function TableEmptyState({
         {effectiveLabel && effectiveAction && (
           <button
             onClick={effectiveAction}
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-[#0284c7] hover:bg-[#0369a1] text-white text-xs font-semibold rounded-md shadow-2xs transition-colors"
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-[#0284c7] hover:bg-[#0369a1] dark:bg-cyan-600 dark:hover:bg-cyan-500 text-white text-xs font-semibold rounded-md shadow-2xs transition-colors"
           >
             <Plus size={14} />
             <span>{effectiveLabel}</span>

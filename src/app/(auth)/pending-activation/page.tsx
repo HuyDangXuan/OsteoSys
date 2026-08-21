@@ -17,6 +17,7 @@ import {
   formItemVariants,
   pulseBreathingVariants,
 } from "@/lib/auth-motion";
+import { useIsMounted } from "@/lib/use-mounted";
 
 function PendingActivationContent() {
   const searchParams = useSearchParams();
@@ -152,6 +153,16 @@ function PendingActivationContent() {
 }
 
 export default function PendingActivationPage() {
+  const isMounted = useIsMounted();
+
+  if (!isMounted) {
+    return (
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-8 shadow-sm flex items-center justify-center py-16">
+        <Loader2 className="animate-spin text-[#0284c7]" size={24} />
+      </div>
+    );
+  }
+
   return (
     <Suspense
       fallback={

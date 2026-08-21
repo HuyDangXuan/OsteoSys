@@ -36,7 +36,7 @@ export default function UserMenu() {
         aria-expanded={isOpen}
       >
         <div className="relative">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#0284c7] to-sky-400 text-white flex items-center justify-center font-bold text-xs shadow-sm">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#0284c7] to-cyan-400 text-white flex items-center justify-center font-bold text-xs shadow-sm">
             TH
           </div>
           <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full" />
@@ -46,7 +46,7 @@ export default function UserMenu() {
           <span className="text-xs font-semibold text-slate-900 dark:text-slate-100 leading-tight">
             BS. Nguyễn Trọng Hải
           </span>
-          <span className="text-xs text-slate-500 dark:text-slate-400 font-mono-data">
+          <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono-data">
             Kỹ Sư Trưởng Sonost
           </span>
         </div>
@@ -68,27 +68,27 @@ export default function UserMenu() {
             exit={{ opacity: 0, scale: 0.95, y: -4 }}
             transition={{ duration: 0.15, ease: "easeOut" }}
             style={{ transformOrigin: "top right" }}
-            className="absolute right-0 mt-2 w-64 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-xl z-50 overflow-hidden divide-y divide-slate-100 dark:divide-slate-800 will-change-transform"
+            className="absolute right-0 mt-2 w-64 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl z-50 overflow-hidden divide-y divide-slate-100 dark:divide-slate-800 will-change-transform"
           >
             {/* User profile summary */}
-            <div className="p-3.5 bg-slate-50/70 dark:bg-slate-950/70">
+            <div className="p-3.5 bg-slate-50/70 dark:bg-[#0b0f17]/80">
               <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#0284c7] to-sky-400 text-white flex items-center justify-center font-bold text-sm shadow-sm">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#0284c7] to-cyan-400 text-white flex items-center justify-center font-bold text-sm shadow-sm">
                   TH
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
+                  <p className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
                     BS. Nguyễn Trọng Hải
                   </p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 truncate font-mono-data">
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate font-mono-data">
                     hai.nguyen@osteosys.vn
                   </p>
                 </div>
               </div>
 
-              <div className="mt-2.5 flex items-center gap-1.5 px-2 py-1 bg-sky-50 dark:bg-sky-950/60 rounded border border-sky-200/60 dark:border-sky-900/60">
-                <ShieldCheck size={13} className="text-[#0284c7] dark:text-sky-400" />
-                <span className="text-xs font-medium text-[#0284c7] dark:text-sky-300">
+              <div className="mt-2.5 flex items-center gap-1.5 px-2 py-1 bg-sky-50 dark:bg-cyan-950/60 rounded border border-sky-200/60 dark:border-cyan-900/60">
+                <ShieldCheck size={13} className="text-[#0284c7] dark:text-cyan-400" />
+                <span className="text-[11px] font-medium text-[#0284c7] dark:text-cyan-300">
                   Quyền Quản trị viên Toàn quyền
                 </span>
               </div>
@@ -99,7 +99,7 @@ export default function UserMenu() {
               <a
                 href="/admin/cai-dat"
                 onClick={() => setIsOpen(false)}
-                className="flex items-center gap-2.5 px-3 py-2 rounded hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors"
               >
                 <User size={14} className="text-slate-400" />
                 <span>Hồ sơ &amp; Chứng chỉ kỹ thuật</span>
@@ -107,7 +107,7 @@ export default function UserMenu() {
               <a
                 href="/admin/sua-chua"
                 onClick={() => setIsOpen(false)}
-                className="flex items-center gap-2.5 px-3 py-2 rounded hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors"
               >
                 <Activity size={14} className="text-slate-400" />
                 <span>Nhật ký hiệu chuẩn thiết bị</span>
@@ -115,7 +115,7 @@ export default function UserMenu() {
               <a
                 href="/admin/cai-dat"
                 onClick={() => setIsOpen(false)}
-                className="flex items-center gap-2.5 px-3 py-2 rounded hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors"
               >
                 <FileCheck size={14} className="text-slate-400" />
                 <span>Mẫu in phiếu đo BMD &amp; T-score</span>
@@ -123,7 +123,7 @@ export default function UserMenu() {
               <a
                 href="#"
                 onClick={() => setIsOpen(false)}
-                className="flex items-center gap-2.5 px-3 py-2 rounded hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors"
               >
                 <HelpCircle size={14} className="text-slate-400" />
                 <span>Tài liệu kỹ thuật Sonost 3000 (PDF)</span>
@@ -131,11 +131,11 @@ export default function UserMenu() {
             </div>
 
             {/* Logout */}
-            <div className="p-1.5 bg-slate-50/50 dark:bg-slate-950/50">
+            <div className="p-1.5 bg-slate-50/50 dark:bg-[#0b0f17]/60">
               <a
                 href="/login"
                 onClick={() => setIsOpen(false)}
-                className="w-full flex items-center gap-2.5 px-3 py-2 rounded text-xs font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
               >
                 <LogOut size={14} />
                 <span>Đăng xuất tài khoản</span>

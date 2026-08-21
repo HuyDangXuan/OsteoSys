@@ -10,14 +10,14 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
   const { isSidebarCollapsed } = useAdmin();
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] dark:bg-[#0b1120] text-slate-900 dark:text-slate-100 transition-colors duration-200">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#0b0f17] text-slate-900 dark:text-slate-100 transition-colors duration-200">
       {/* 1. Sidebar */}
       <AdminSidebar />
 
       {/* 2. Topbar */}
       <AdminTopbar />
 
-      {/* 3. Main Area: #f8fafc ground, responsive dynamic margin */}
+      {/* 3. Main Area: responsive dynamic margin */}
       <main
         className={`transition-all duration-200 min-h-[calc(100vh-4rem)] p-4 sm:p-6 lg:p-8 ${
           isSidebarCollapsed ? "lg:pl-20" : "lg:pl-[17rem]"

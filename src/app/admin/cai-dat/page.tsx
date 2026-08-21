@@ -3,13 +3,14 @@
 import React, { useState } from "react";
 import {
   Settings,
-  Shield,
   Printer,
   Database,
   Save,
   CheckCircle2,
   Sliders,
+  Palette,
 } from "lucide-react";
+import { ThemeSelectDropdown } from "@/components/ui/theme-toggle";
 
 export default function SettingsPage() {
   const [saved, setSaved] = useState(false);
@@ -35,7 +36,7 @@ export default function SettingsPage() {
 
         <button
           onClick={handleSave}
-          className="flex items-center gap-1.5 px-3.5 py-1.5 bg-[#0284c7] hover:bg-[#0369a1] text-white text-xs font-semibold rounded-md shadow-2xs transition-colors"
+          className="flex items-center gap-1.5 px-3.5 py-1.5 bg-[#0284c7] hover:bg-[#0369a1] dark:bg-cyan-600 dark:hover:bg-cyan-500 text-white text-xs font-semibold rounded-md shadow-2xs transition-colors"
         >
           <Save size={14} />
           <span>Lưu cấu hình</span>
@@ -50,10 +51,24 @@ export default function SettingsPage() {
       )}
 
       <form onSubmit={handleSave} className="space-y-6">
-        {/* Card 1: Chuẩn tham chiếu lâm sàng */}
-        <div className="p-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-2xs space-y-4">
+        {/* Card 1: Giao diện Sáng / Tối (Clinical Theme) */}
+        <div className="p-5 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-lg shadow-2xs space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-slate-100">
+              <Palette size={16} className="text-[#0284c7] dark:text-cyan-400" />
+              <h3>Chế Độ Giao Diện Y Tế (Clinical Deep Slate)</h3>
+            </div>
+            <ThemeSelectDropdown />
+          </div>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Tự động thích ứng với ánh sáng phòng khám hoặc sở thích người dùng. Chế độ Tối (Dark mode) sử dụng nền Deep Slate #0b0f17 giúp bác sĩ làm việc ban đêm không bị mỏi mắt.
+          </p>
+        </div>
+
+        {/* Card 2: Chuẩn tham chiếu lâm sàng */}
+        <div className="p-5 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-lg shadow-2xs space-y-4">
           <div className="flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-slate-100">
-            <Sliders size={16} className="text-[#0284c7]" />
+            <Sliders size={16} className="text-[#0284c7] dark:text-cyan-400" />
             <h3>Chuẩn Tham Chiếu Đo Loãng Xương (QUS)</h3>
           </div>
 
@@ -62,7 +77,7 @@ export default function SettingsPage() {
               <label className="block font-medium text-slate-700 dark:text-slate-300 mb-1">
                 Bộ dữ liệu dân số tham chiếu T-score
               </label>
-              <select className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md">
+              <select className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md text-slate-900 dark:text-slate-100 outline-none">
                 <option>NHANES III (Asian / Vietnamese Cohort)</option>
                 <option>WHO Caucasian Reference</option>
                 <option>ISCD 2023 Guidelines</option>
@@ -76,16 +91,16 @@ export default function SettingsPage() {
               <input
                 type="text"
                 defaultValue="< 1.5 %"
-                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md font-mono-data"
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md font-mono-data text-slate-900 dark:text-slate-100 outline-none"
               />
             </div>
           </div>
         </div>
 
-        {/* Card 2: Kết nối DICOM / PACS */}
-        <div className="p-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-2xs space-y-4">
+        {/* Card 3: Kết nối DICOM / PACS */}
+        <div className="p-5 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-lg shadow-2xs space-y-4">
           <div className="flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-slate-100">
-            <Database size={16} className="text-[#0284c7]" />
+            <Database size={16} className="text-[#0284c7] dark:text-cyan-400" />
             <h3>Cấu hình Kết nối PACS / DICOM 3.0</h3>
           </div>
 
@@ -97,7 +112,7 @@ export default function SettingsPage() {
               <input
                 type="text"
                 defaultValue="192.168.1.120"
-                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md font-mono-data"
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md font-mono-data text-slate-900 dark:text-slate-100 outline-none"
               />
             </div>
             <div>
@@ -107,7 +122,7 @@ export default function SettingsPage() {
               <input
                 type="text"
                 defaultValue="104"
-                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md font-mono-data"
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md font-mono-data text-slate-900 dark:text-slate-100 outline-none"
               />
             </div>
             <div>
@@ -117,16 +132,16 @@ export default function SettingsPage() {
               <input
                 type="text"
                 defaultValue="SONOST3000_PACS"
-                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md font-mono-data"
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md font-mono-data text-slate-900 dark:text-slate-100 outline-none"
               />
             </div>
           </div>
         </div>
 
-        {/* Card 3: Mẫu in phiếu kết quả */}
-        <div className="p-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-2xs space-y-4">
+        {/* Card 4: Mẫu in phiếu kết quả */}
+        <div className="p-5 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-lg shadow-2xs space-y-4">
           <div className="flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-slate-100">
-            <Printer size={16} className="text-[#0284c7]" />
+            <Printer size={16} className="text-[#0284c7] dark:text-cyan-400" />
             <h3>Mẫu In Phiếu Kết Quả Siêu Âm Xương (Thermal / A4)</h3>
           </div>
 
@@ -138,14 +153,14 @@ export default function SettingsPage() {
               <input
                 type="text"
                 defaultValue="KẾT QUẢ ĐO MẬT ĐỘ XƯƠNG GÓT CHÂN (QUS)"
-                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md"
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md text-slate-900 dark:text-slate-100 outline-none"
               />
             </div>
             <div>
               <label className="block font-medium text-slate-700 dark:text-slate-300 mb-1">
                 Tự động xuất đồ thị T-score / Z-score
               </label>
-              <select className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md">
+              <select className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md text-slate-900 dark:text-slate-100 outline-none">
                 <option>Bật (Đồ thị phân loại WHO 3 vùng màu)</option>
                 <option>Tắt (Chỉ in số liệu BUA/SOS)</option>
               </select>

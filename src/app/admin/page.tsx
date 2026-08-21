@@ -6,10 +6,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   CalendarCheck,
   Wrench,
-  Boxes,
-  Users,
-  TrendingUp,
-  ArrowUpRight,
   Plus,
   RefreshCw,
   ChevronRight,
@@ -18,86 +14,31 @@ import {
 import { SkeletonDataTable } from "@/components/ui/skeleton";
 import { TableEmptyState } from "@/components/admin/TableStates";
 import { CreateRentalDrawer, CreateRepairModal } from "@/components/admin/AdminDrawers";
+import { DynamicStatCards, DeviceStatsData } from "@/components/admin/DynamicStatCards";
 
-interface MetricCardProps {
-  title: string;
-  value: string;
-  subValue?: string;
-  change?: string;
-  trend?: "up" | "down" | "neutral";
-  icon: React.ComponentType<{ size?: number; className?: string }>;
-  iconColor: string;
-  bgColor: string;
-  href: string;
+export const dynamic = "force-dynamic";
+
+interface RecentRentalItem {
+  id: string;
+  client: string;
+  device: string;
+  startDate: string;
+  endDate: string;
+  status: "active" | "expiring_soon" | "completed";
+  statusLabel: string;
+  monthlyFee: string;
 }
 
-function MetricCard({
-  title,
-  value,
-  subValue,
-  change,
-  trend,
-  icon: Icon,
-  iconColor,
-  bgColor,
-  href,
-}: MetricCardProps) {
-  return (
-    <motion.div
-      variants={{
-        hidden: { opacity: 0, y: 8 },
-        visible: { opacity: 1, y: 0, transition: { duration: 0.25, ease: "easeOut" } },
-      }}
-      whileHover={{ y: -2, transition: { duration: 0.15 } }}
-      className="will-change-transform"
-    >
-      <Link
-        href={href}
-        className="p-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-2xs hover:border-[#0284c7] dark:hover:border-sky-500 transition-all group flex flex-col justify-between h-[124px]"
-      >
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
-              {title}
-            </p>
-            <div className="mt-1 flex items-baseline gap-2">
-              <span className="text-2xl font-bold font-mono-data text-slate-900 dark:text-slate-100 tabular-nums">
-                {value}
-              </span>
-              {subValue && (
-                <span className="text-xs text-slate-500 dark:text-slate-400 font-mono-data">
-                  {subValue}
-                </span>
-              )}
-            </div>
-          </div>
-          <div
-            className={`w-10 h-10 rounded-lg ${bgColor} ${iconColor} flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform`}
-          >
-            <Icon size={20} />
-          </div>
-        </div>
-
-        {change && (
-          <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
-            <span
-              className={`font-medium flex items-center gap-1 font-mono-data ${
-                trend === "up"
-                  ? "text-emerald-600 dark:text-emerald-400"
-                  : "text-rose-600 dark:text-rose-400"
-              }`}
-            >
-              <TrendingUp size={13} />
-              {change}
-            </span>
-            <span className="text-slate-400 dark:text-slate-500 text-xs group-hover:text-[#0284c7] dark:group-hover:text-sky-400 flex items-center gap-0.5">
-              Chi tiết <ArrowUpRight size={12} />
-            </span>
-          </div>
-        )}
-      </Link>
-    </motion.div>
-  );
+interface RecentRepairItem {
+  id: string;
+  facility: string;
+  device: string;
+  issue: string;
+  priority: string;
+  priorityLabel: string;
+  status: string;
+  statusLabel: string;
+  technician: string;
 }
 
 export default function AdminOverviewPage() {
@@ -107,26 +48,28 @@ export default function AdminOverviewPage() {
   const [isRentalDrawerOpen, setIsRentalDrawerOpen] = useState(false);
   const [isRepairModalOpen, setIsRepairModalOpen] = useState(false);
 
-  const [metrics, setMetrics] = useState({
-    activeRentals: { count: 0, expiringSoon: 0, changeLabel: "" },
-    monthlyRevenue: { total: 0, formatted: "0 ₫", growth: "" },
-    pendingRepairs: { count: 0, urgent: 0, statusLabel: "" },
-    deviceFleet: { total: 0, rented: 0, available: 0, maintenance: 0, repairing: 0, utilizationRate: "0%" },
-    totalPartners: 0,
-  });
-
-  const [rentals, setRentals] = useState<any[]>([]);
-  const [repairs, setRepairs] = useState<any[]>([]);
+  const [stats, setStats] = useState<DeviceStatsData | null>(null);
+  const [rentals, setRentals] = useState<RecentRentalItem[]>([]);
+  const [repairs, setRepairs] = useState<RecentRepairItem[]>([]);
 
   const fetchOverviewData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const res = await fetch("/api/admin/overview");
-      const json = await res.json();
-      if (json.status === "success" && json.data) {
-        setMetrics(json.data.metrics);
-        setRentals(json.data.recentContracts || []);
-        setRepairs(json.data.recentTickets || []);
+      const [overviewRes, statsRes] = await Promise.all([
+        fetch("/api/admin/overview", { cache: "no-store" }),
+        fetch("/api/admin/devices/stats", { cache: "no-store" }),
+      ]);
+
+      const overviewJson = await overviewRes.json();
+      const statsJson = await statsRes.json();
+
+      if (overviewJson.status === "success" && overviewJson.data) {
+        setRentals(overviewJson.data.recentContracts || []);
+        setRepairs(overviewJson.data.recentTickets || []);
+      }
+
+      if (statsJson.status === "success" && statsJson.data) {
+        setStats(statsJson.data);
       }
     } catch (err) {
       console.error("Failed to load overview data:", err);
@@ -154,11 +97,10 @@ export default function AdminOverviewPage() {
     fetchOverviewData();
   };
 
-  // Percentages for fleet distribution
-  const totalFleet = metrics.deviceFleet.total || 48;
-  const rentedPct = ((metrics.deviceFleet.rented / totalFleet) * 100).toFixed(1);
-  const availPct = ((metrics.deviceFleet.available / totalFleet) * 100).toFixed(1);
-  const maintPct = (((metrics.deviceFleet.maintenance + metrics.deviceFleet.repairing) / totalFleet) * 100).toFixed(1);
+  const totalFleet = stats?.totalDevices || 48;
+  const rentedPct = stats?.percentages?.rented || 0;
+  const availPct = stats?.percentages?.available || 0;
+  const maintPct = stats?.percentages?.maintenance || 0;
 
   return (
     <div className="space-y-6">
@@ -241,67 +183,8 @@ export default function AdminOverviewPage() {
         </div>
       </motion.div>
 
-      {/* 2. Staggered 4 Key Metrics Grid */}
-      <motion.div
-        variants={{
-          hidden: { opacity: 0 },
-          visible: {
-            opacity: 1,
-            transition: { staggerChildren: 0.04 },
-          },
-        }}
-        initial="hidden"
-        animate="visible"
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
-      >
-        <MetricCard
-          title="Tổng máy Sonost 3000"
-          value={String(metrics.deviceFleet.total || 48)}
-          subValue="máy trong kho"
-          change={`${metrics.deviceFleet.available} máy sẵn sàng bàn giao`}
-          trend="up"
-          icon={Boxes}
-          iconColor="text-sky-600 dark:text-sky-400"
-          bgColor="bg-sky-50 dark:bg-sky-950/60"
-          href="/admin/kho-thiet-bi"
-        />
-
-        <MetricCard
-          title="Máy đang cho thuê"
-          value={String(metrics.deviceFleet.rented || 0)}
-          subValue={`/ ${totalFleet} (${rentedPct}%)`}
-          change={`Doanh thu: ${metrics.monthlyRevenue.formatted}`}
-          trend="up"
-          icon={CalendarCheck}
-          iconColor="text-emerald-600 dark:text-emerald-400"
-          bgColor="bg-emerald-50 dark:bg-emerald-950/60"
-          href="/admin/thue-may"
-        />
-
-        <MetricCard
-          title="Phiếu sửa chữa & Bảo trì"
-          value={String(metrics.pendingRepairs.count || 0)}
-          subValue="đang xử lý"
-          change={metrics.pendingRepairs.statusLabel || "Kiểm định định kỳ"}
-          trend="up"
-          icon={Wrench}
-          iconColor="text-amber-600 dark:text-amber-400"
-          bgColor="bg-amber-50 dark:bg-amber-950/60"
-          href="/admin/sua-chua"
-        />
-
-        <MetricCard
-          title="Khách hàng B2B"
-          value={String(metrics.totalPartners || 0)}
-          subValue="bệnh viện & PK"
-          change="+15 đối tác đã liên kết"
-          trend="up"
-          icon={Users}
-          iconColor="text-indigo-600 dark:text-indigo-400"
-          bgColor="bg-indigo-50 dark:bg-indigo-950/60"
-          href="/admin/khach-hang"
-        />
-      </motion.div>
+      {/* 2. Staggered 4 Key Dynamic Metric Cards */}
+      <DynamicStatCards initialStats={stats} isLoading={isLoading} onRefresh={fetchOverviewData} />
 
       {/* 3. Main Data Section: 2 Columns */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -348,7 +231,7 @@ export default function AdminOverviewPage() {
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.15 }}
               >
-                <SkeletonDataTable rows={4} columns={5} />
+                <SkeletonDataTable rows={4} columns={6} />
               </motion.div>
             ) : filteredRentals.length === 0 ? (
               <motion.div
@@ -405,7 +288,7 @@ export default function AdminOverviewPage() {
                           </span>
                         </td>
                         <td className="py-3 px-3 text-slate-600 dark:text-slate-300 font-mono-data">
-                          {rental.device}
+                          #{rental.device}
                         </td>
                         <td className="py-3 px-3 text-slate-500 dark:text-slate-400 font-mono-data">
                           {rental.startDate} → {rental.endDate || "Chưa xác định"}
@@ -456,7 +339,9 @@ export default function AdminOverviewPage() {
 
             <div className="space-y-3">
               {repairs.length === 0 ? (
-                <p className="text-xs text-slate-400 text-center py-4">Không có phiếu sửa chữa nào cần xử lý.</p>
+                <p className="text-xs text-slate-400 text-center py-4">
+                  Không có phiếu sửa chữa nào cần xử lý.
+                </p>
               ) : (
                 repairs.map((repair) => (
                   <div
@@ -517,7 +402,7 @@ export default function AdminOverviewPage() {
                   Đang cho thuê hoạt động
                 </span>
                 <span className="font-mono-data font-bold text-slate-900 dark:text-slate-100">
-                  {metrics.deviceFleet.rented} máy ({rentedPct}%)
+                  {stats?.rentedDevices || 0} máy ({rentedPct}%)
                 </span>
               </div>
               <div className="flex justify-between items-center">
@@ -526,7 +411,7 @@ export default function AdminOverviewPage() {
                   Sẵn sàng trong kho
                 </span>
                 <span className="font-mono-data font-bold text-slate-900 dark:text-slate-100">
-                  {metrics.deviceFleet.available} máy ({availPct}%)
+                  {stats?.availableDevices || 0} máy ({availPct}%)
                 </span>
               </div>
               <div className="flex justify-between items-center">
@@ -535,15 +420,27 @@ export default function AdminOverviewPage() {
                   Đang bảo trì / Sửa chữa
                 </span>
                 <span className="font-mono-data font-bold text-slate-900 dark:text-slate-100">
-                  {metrics.deviceFleet.maintenance + metrics.deviceFleet.repairing} máy ({maintPct}%)
+                  {stats?.maintenanceDevices || 0} máy ({maintPct}%)
                 </span>
               </div>
             </div>
 
             <div className="w-full bg-slate-100 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden flex mt-3">
-              <div className="bg-emerald-500 h-full" style={{ width: `${rentedPct}%` }} title={`Đang thuê (${rentedPct}%)`} />
-              <div className="bg-sky-500 h-full" style={{ width: `${availPct}%` }} title={`Sẵn sàng (${availPct}%)`} />
-              <div className="bg-amber-500 h-full" style={{ width: `${maintPct}%` }} title={`Bảo trì (${maintPct}%)`} />
+              <div
+                className="bg-emerald-500 h-full transition-all duration-500"
+                style={{ width: `${rentedPct}%` }}
+                title={`Đang thuê (${rentedPct}%)`}
+              />
+              <div
+                className="bg-sky-500 h-full transition-all duration-500"
+                style={{ width: `${availPct}%` }}
+                title={`Sẵn sàng (${availPct}%)`}
+              />
+              <div
+                className="bg-amber-500 h-full transition-all duration-500"
+                style={{ width: `${maintPct}%` }}
+                title={`Bảo trì (${maintPct}%)`}
+              />
             </div>
           </div>
         </div>
