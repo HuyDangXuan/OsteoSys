@@ -12,6 +12,14 @@ const nextConfig: NextConfig = {
         destination: "/san-pham/sonost-3000",
       },
       {
+        source: "/products/sonost-3000/3d-viewer",
+        destination: "/san-pham/sonost-3000/3d-viewer",
+      },
+      {
+        source: "/products/sonost-3000/exploded-view",
+        destination: "/san-pham/sonost-3000/exploded-view",
+      },
+      {
         source: "/services/rental",
         destination: "/dich-vu-cho-thue",
       },

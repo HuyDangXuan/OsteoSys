@@ -18,6 +18,10 @@ import {
   Award,
   Loader2,
   FileSpreadsheet,
+  Rotate3d,
+  Box,
+  ExternalLink,
+  Sparkles,
 } from "lucide-react";
 import { getCmsContent } from "@/lib/actions/cms";
 
@@ -74,8 +78,8 @@ export default function Sonost3000ProductPage() {
     hardware: [
       { label: "Đầu dò siêu âm (Transducer)", value: "Đầu dò đôi tần số trung tâm 0.5 MHz (Độ xuyên thấu cao)" },
       { label: "Màn hình hiển thị", value: "Màn hình cảm ứng màu TFT LCD 7.0 inch độ phân giải cao" },
-      { label: "Máy in tích hợp (Built-in Printer)", value: "Máy in nhiệt tích hợp khổ 58mm (In kết quả & đồ thị phân loại tức thì)" },
-      { label: "Cổng giao tiếp ngoại vi", value: "2x USB 2.0, 1x Cổng LAN RJ45, 1x Cổng kết nối máy in Laser ngoài" },
+      { label: "Máy in nhiệt tích hợp (Built-in Printer)", value: "Máy in nhiệt 58mm tích hợp sẵn tại mặt sau thân máy (không chiếm diện tích mặt trước, dễ dàng thay cuộn giấy in)" },
+      { label: "Cổng giao tiếp ngoại vi", value: "2x USB 2.0, 1x Cổng LAN RJ45, 1x RS-232C, 1x Cổng kết nối máy in Laser ngoài" },
       { label: "Kích thước & Trọng lượng", value: "300 (W) x 620 (D) x 390 (H) mm — Trọng lượng: 12.0 kg (Dễ dàng di chuyển lưu động)" },
       { label: "Nguồn điện vận hành", value: "AC 100~240V, 50/60Hz, Công suất tiêu thụ 130W" },
     ],
@@ -88,7 +92,6 @@ export default function Sonost3000ProductPage() {
     ],
   };
 
-  // Convert cms specGroups into map or fallback
   const specGroupsMap: Record<string, Array<{ label: string; value: string }>> = { ...defaultSpecs };
   if (cmsSpecs?.specGroups && Array.isArray(cmsSpecs.specGroups)) {
     cmsSpecs.specGroups.forEach((g: any) => {
@@ -121,9 +124,19 @@ export default function Sonost3000ProductPage() {
               transition={{ duration: 0.4 }}
               className="lg:col-span-7 space-y-5"
             >
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-50 dark:bg-sky-950/60 border border-sky-200 dark:border-sky-800 text-[#0284c7] dark:text-sky-400 text-xs font-semibold uppercase tracking-wider font-mono-data">
-                <Award size={14} />
-                <span>Tiêu Chuẩn Vàng Siêu Âm Đo Loãng Xương</span>
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-50 dark:bg-sky-950/60 border border-sky-200 dark:border-sky-800 text-[#0284c7] dark:text-sky-400 text-xs font-semibold uppercase tracking-wider font-mono-data">
+                  <Award size={14} />
+                  <span>Tiêu Chuẩn Vàng Siêu Âm Đo Loãng Xương</span>
+                </div>
+
+                <Link
+                  href="/san-pham/sonost-3000/3d-viewer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-100 dark:bg-cyan-950/80 border border-cyan-300 dark:border-cyan-700 text-cyan-700 dark:text-cyan-300 text-xs font-bold font-mono-data hover:scale-105 transition-transform"
+                >
+                  <Rotate3d size={14} className="animate-spin" style={{ animationDuration: "8s" }} />
+                  <span>Trải Nghiệm 3D 360° Studio</span>
+                </Link>
               </div>
 
               <h1 className="text-2xl sm:text-4xl font-bold tracking-tight text-slate-900 dark:text-white leading-tight">
@@ -142,6 +155,14 @@ export default function Sonost3000ProductPage() {
                 >
                   <span>Yêu Cầu Báo Giá &amp; Demo</span>
                   <ChevronRight size={14} />
+                </Link>
+
+                <Link
+                  href="/san-pham/sonost-3000/3d-viewer"
+                  className="flex items-center gap-1.5 px-4 py-2.5 bg-slate-900 dark:bg-slate-800 border border-slate-700 hover:bg-slate-800 text-white text-xs font-semibold rounded-md shadow-sm transition-colors"
+                >
+                  <Box size={14} className="text-cyan-400" />
+                  <span>Khám Phá Mô Hình 3D</span>
                 </Link>
 
                 <button
@@ -180,39 +201,60 @@ export default function Sonost3000ProductPage() {
               </div>
             </motion.div>
 
-            {/* Right Col: Interactive Visual Scanner Frame */}
+            {/* Right Col: High-End Clinical Exhibit & 3D Studio Gateway Card */}
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.4, delay: 0.1 }}
               className="lg:col-span-5"
             >
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-md relative overflow-hidden space-y-4">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-xl relative overflow-hidden space-y-4">
+                {/* Header Badge */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200">
                     <Radio size={16} className="text-[#0284c7]" />
                     <span>Sonost 3000 Sonometer</span>
                   </div>
-                  <span className="px-2 py-0.5 bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 text-xs font-mono-data rounded font-semibold">
-                    ISO 13485 / CE
+                  <span className="px-2.5 py-0.5 bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 text-xs font-mono-data rounded-full font-semibold">
+                    ISO 13485 / CE Validated
                   </span>
                 </div>
 
-                {/* SVG Visual Exhibit */}
-                <div className="bg-slate-950 rounded-lg p-6 text-white flex flex-col items-center justify-center space-y-3 relative overflow-hidden">
-                  <div className="w-20 h-20 rounded-full bg-sky-500/20 border border-sky-500/40 flex items-center justify-center">
-                    <Activity size={36} className="text-sky-400 animate-pulse" />
+                {/* Interactive Scanner Exhibit & Sonometer Visual */}
+                <div className="bg-gradient-to-br from-slate-950 via-slate-900 to-sky-950 rounded-xl p-6 text-white flex flex-col items-center justify-center space-y-4 relative overflow-hidden border border-sky-500/20 shadow-inner group">
+                  {/* Decorative Glowing Rings */}
+                  <div className="relative flex items-center justify-center w-24 h-24 my-1">
+                    <div className="absolute inset-0 rounded-full border border-sky-400/20 animate-ping" />
+                    <div className="absolute inset-2 rounded-full border border-cyan-400/40 animate-pulse" />
+                    <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-sky-600 to-cyan-400 flex items-center justify-center shadow-lg shadow-cyan-500/40 group-hover:scale-110 transition-transform duration-300">
+                      <Activity size={32} className="text-white" />
+                    </div>
                   </div>
-                  <div className="text-center">
-                    <span className="font-bold text-sm block">Đo Vận Tốc Âm SOS &amp; BUA</span>
-                    <span className="text-xs text-slate-400 font-mono-data">Mật độ xương gót chân Calcaneus</span>
+
+                  <div className="text-center space-y-1">
+                    <span className="font-bold text-base block text-white">Đo Siêu Âm Gót Chân Calcaneus</span>
+                    <span className="text-xs text-sky-300 font-mono-data">QUS Parameters: SOS (m/s) &bull; BUA (dB/MHz) &bull; BQI</span>
                   </div>
+
+                  {/* High-Impact 3D Studio Launcher Button */}
+                  <Link
+                    href="/san-pham/sonost-3000/3d-viewer"
+                    className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-gradient-to-r from-sky-600 via-cyan-500 to-sky-600 hover:from-sky-500 hover:to-cyan-400 text-slate-950 font-bold text-xs sm:text-sm shadow-lg shadow-cyan-500/25 transition-all transform hover:scale-[1.02] cursor-pointer"
+                  >
+                    <Rotate3d size={18} className="animate-spin" style={{ animationDuration: "6s" }} />
+                    <span>Mở Không Gian 3D Studio 360° (Toàn Màn Hình)</span>
+                    <ExternalLink size={15} />
+                  </Link>
                 </div>
 
-                <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-md text-xs text-slate-600 dark:text-slate-300 space-y-1">
-                  <p className="font-semibold text-slate-900 dark:text-slate-100">Bàn giao bao gồm:</p>
+                {/* Deliverables summary */}
+                <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl text-xs text-slate-600 dark:text-slate-300 space-y-1.5 border border-slate-100 dark:border-slate-800">
+                  <p className="font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                    <CheckCircle2 size={14} className="text-emerald-500" />
+                    <span>Quy cách bàn giao tiêu chuẩn y tế:</span>
+                  </p>
                   {deliverables.map((item: string, idx: number) => (
-                    <p key={idx}>• {item}</p>
+                    <p key={idx} className="pl-4 text-[11px] text-slate-500 dark:text-slate-400">• {item}</p>
                   ))}
                 </div>
               </div>
@@ -220,7 +262,34 @@ export default function Sonost3000ProductPage() {
           </div>
         </section>
 
-        {/* 2. Key Clinical Features (Staggered Animation) */}
+        {/* 2. Dedicated 3D Interactive Showcase Banner */}
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="rounded-2xl bg-gradient-to-r from-slate-900 via-sky-950 to-slate-900 border border-sky-500/30 p-6 sm:p-8 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="space-y-2 max-w-2xl">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-500/20 border border-cyan-400/30 text-cyan-300 text-xs font-mono-data font-bold uppercase">
+                <Sparkles size={13} />
+                <span>Trải Nghiệm Studio 3D Toàn Diện</span>
+              </div>
+              <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
+                Khám Phá Cấu Trúc Y Khoa Sonost 3000 Trên Không Gian 3D
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                Tương tác xoay 360°, phóng to chi tiết 4 điểm neo lâm sàng (Đầu dò Calcaneus, Khay định vị, Màn hình LCD 7" hiển thị đồ thị T-Score, Máy in nhiệt tích hợp) và bật chế độ X-Ray/Wireframe để nghiên cứu cấu trúc bên trong.
+              </p>
+            </div>
+
+            <Link
+              href="/san-pham/sonost-3000/3d-viewer"
+              className="shrink-0 flex items-center gap-2 px-5 py-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs sm:text-sm shadow-lg shadow-cyan-500/30 transition-all hover:scale-105"
+            >
+              <Rotate3d size={16} />
+              <span>Vào 3D Studio Toàn Màn Hình</span>
+              <ChevronRight size={16} />
+            </Link>
+          </div>
+        </section>
+
+        {/* 3. Key Clinical Features (Staggered Animation) */}
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
           <div className="text-center max-w-2xl mx-auto mb-8 space-y-1.5">
             <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
@@ -280,7 +349,7 @@ export default function Sonost3000ProductPage() {
           </div>
         </section>
 
-        {/* 3. Interactive Specifications Tabs with LayoutId */}
+        {/* 4. Interactive Specifications Tabs with LayoutId */}
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 sm:p-8 shadow-sm space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800">

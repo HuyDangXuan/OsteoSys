@@ -90,8 +90,8 @@ const DEFAULT_CMS_DATA: Record<CmsSectionKey, { title: string; data: Record<stri
           items: [
             { label: "Đầu dò siêu âm", value: "Đầu dò đôi 0.5 MHz xuyên thấu cao" },
             { label: "Màn hình", value: "Cảm ứng màu TFT LCD 7.0 inch" },
-            { label: "Máy in", value: "Máy in nhiệt tích hợp khổ 58mm" },
-            { label: "Kết nối", value: "2x USB + 1x LAN RJ45 + Laser printer port" },
+            { label: "Máy in tích hợp", value: "Máy in nhiệt 58mm tích hợp sẵn tại mặt sau thân máy (không chiếm diện tích mặt trước, dễ dàng thay cuộn giấy in)" },
+            { label: "Kết nối & I/O", value: "2x USB + 1x LAN RJ45 + RS-232C + Laser printer port" },
             { label: "Kích thước & Khối lượng", value: "300 x 620 x 390 mm / 12.0 kg" },
             { label: "Nguồn điện", value: "AC 100~240V, 50/60Hz, 130W" },
           ],
