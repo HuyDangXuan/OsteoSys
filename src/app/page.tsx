@@ -6,20 +6,27 @@ import SolutionsSection from "@/components/SolutionsSection";
 import ClinicalSection from "@/components/ClinicalSection";
 import ContactForm from "@/components/ContactForm";
 import Footer from "@/components/Footer";
+import { getCmsContent } from "@/lib/actions/cms";
 
-export default function Home() {
+export default async function Home() {
+  const [globalContent, heroContent, clinicalContent] = await Promise.all([
+    getCmsContent("global"),
+    getCmsContent("home_hero"),
+    getCmsContent("clinical_evidence"),
+  ]);
+
   return (
     <>
-      <Header />
+      <Header globalData={globalContent.data} />
       <main>
-        <HeroSection />
+        <HeroSection data={heroContent.data} />
         <MetricsStrip />
         <EquipmentSection />
         <SolutionsSection />
-        <ClinicalSection />
+        <ClinicalSection data={clinicalContent.data} />
         <ContactForm />
       </main>
-      <Footer />
+      <Footer globalData={globalContent.data} />
     </>
   );
 }

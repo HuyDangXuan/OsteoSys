@@ -21,10 +21,27 @@ const navLinks = [
   { label: "Báo giá B2B", href: "/bao-gia" },
 ];
 
-export default function Header() {
+interface HeaderProps {
+  globalData?: {
+    hotline?: string;
+    hotlineLabel?: string;
+    topBanner?: {
+      enabled?: boolean;
+      text?: string;
+      linkUrl?: string;
+      linkLabel?: string;
+    };
+  };
+}
+
+export default function Header({ globalData }: HeaderProps) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+
+  const hotline = globalData?.hotline || "0904 000 000";
+  const hotlineTel = hotline.replace(/\s+/g, "");
+  const topBanner = globalData?.topBanner;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -46,6 +63,21 @@ export default function Header() {
           : "bg-white/80 dark:bg-[#0b0f17]/80 backdrop-blur-xs border-b border-slate-100 dark:border-slate-850"
       }`}
     >
+      {/* Optional Top Announcement Bar */}
+      {topBanner?.enabled && topBanner.text && (
+        <div className="bg-[#0284c7] dark:bg-cyan-900 text-white text-[11px] font-medium py-1 px-4 text-center flex items-center justify-center gap-2">
+          <span>{topBanner.text}</span>
+          {topBanner.linkUrl && (
+            <Link
+              href={topBanner.linkUrl}
+              className="underline font-bold hover:text-sky-200 transition-colors"
+            >
+              {topBanner.linkLabel || "Xem chi tiết →"}
+            </Link>
+          )}
+        </div>
+      )}
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
@@ -98,11 +130,11 @@ export default function Header() {
           {/* Right actions */}
           <div className="hidden sm:flex items-center gap-3">
             <a
-              href="tel:0904000000"
+              href={`tel:${hotlineTel}`}
               className="flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-[#0284c7] dark:hover:text-cyan-400 transition-colors"
             >
               <Phone size={13} className="text-[#0284c7] dark:text-cyan-400" />
-              <span className="font-mono-data">0904 000 000</span>
+              <span className="font-mono-data">{hotline}</span>
             </a>
 
             {/* Theme Toggle Button */}

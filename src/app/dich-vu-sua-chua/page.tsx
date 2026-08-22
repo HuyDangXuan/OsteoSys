@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import Header from "@/components/Header";
@@ -16,7 +16,9 @@ import {
   Loader2,
   Clock,
   Send,
+  ShieldCheck,
 } from "lucide-react";
+import { getCmsContent } from "@/lib/actions/cms";
 
 export default function RepairServicePage() {
   const [formData, setFormData] = useState({
@@ -29,6 +31,38 @@ export default function RepairServicePage() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [cmsRepair, setCmsRepair] = useState<any>(null);
+  const [globalData, setGlobalData] = useState<any>(null);
+
+  const defaultSteps = [
+    { num: "01", title: "Tiếp Nhận Yêu Cầu", desc: "Ghi nhận mã máy Sonost 3000, triệu chứng lỗi và địa chỉ cơ sở y tế." },
+    { num: "02", title: "Kiểm Tra & Đo BUA/SOS", desc: "Kỹ sư đo kiểm tín hiệu xung đầu dò siêu âm và áp suất bóng khí tiếp xúc." },
+    { num: "03", title: "Báo Giá Linh Kiện", desc: "Minh bạch chi phí linh kiện chính hãng OsteoSys kèm thời gian bảo hành." },
+    { num: "04", title: "Sửa Chữa & Thay Thế", desc: "Thay thế màng bóng dầu, board nguồn, máy in nhiệt hoặc đầu dò 0.5MHz." },
+    { num: "05", title: "Hiệu Chuẩn Phantom ISCD", desc: "Kiểm định sai số với Phantom chuẩn và dán tem kiểm định chất lượng." },
+  ];
+
+  const defaultFaults = [
+    { title: "1. Nhiễu tín hiệu BUA / SOS:", desc: "Do suy hao đầu dò siêu âm 0.5MHz hoặc bong bóng khí trong màng dầu." },
+    { title: "2. Màng bóng dầu bị xẹp / không căng:", desc: "Bơm dầu tự động bị kẹt van khí hoặc màng silicon bị chai cứng sau thời gian dài sử dụng." },
+    { title: "3. Lỗi in nhiệt hoặc không kết nối PACS:", desc: "Kẹt trục cuốn giấy in nhiệt 58mm hoặc sai cấu hình IP máy chủ DICOM." },
+  ];
+
+  useEffect(() => {
+    async function loadCms() {
+      try {
+        const [repairRes, globalRes] = await Promise.all([
+          getCmsContent("repair_services"),
+          getCmsContent("global"),
+        ]);
+        setCmsRepair(repairRes.data);
+        setGlobalData(globalRes.data);
+      } catch (e) {
+        console.error("Failed to load repair services CMS:", e);
+      }
+    }
+    loadCms();
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,17 +73,27 @@ export default function RepairServicePage() {
     }, 600);
   };
 
-  const steps = [
-    { num: "01", title: "Tiếp Nhận Yêu Cầu", desc: "Ghi nhận mã máy Sonost 3000, triệu chứng lỗi và địa chỉ cơ sở y tế." },
-    { num: "02", title: "Kiểm Tra & Đo BUA/SOS", desc: "Kỹ sư đo kiểm tín hiệu xung đầu dò siêu âm và áp suất bóng khí tiếp xúc." },
-    { num: "03", title: "Báo Giá Linh Kiện", desc: "Minh bạch chi phí linh kiện chính hãng OsteoSys kèm thời gian bảo hành." },
-    { num: "04", title: "Sửa Chữa & Thay Thế", desc: "Thay thế màng bóng dầu, board nguồn, máy in nhiệt hoặc đầu dò 0.5MHz." },
-    { num: "05", title: "Hiệu Chuẩn Phantom ISCD", desc: "Kiểm định sai số với Phantom chuẩn và dán tem kiểm định chất lượng." },
-  ];
+  const stepsToRender = cmsRepair?.steps && Array.isArray(cmsRepair.steps) && cmsRepair.steps.length > 0
+    ? cmsRepair.steps.map((s: any, idx: number) => ({
+        num: String(s.stepNumber || idx + 1).padStart(2, "0"),
+        title: s.title,
+        desc: s.description || s.desc,
+      }))
+    : defaultSteps;
+
+  const faultsToRender = cmsRepair?.commonFaults && Array.isArray(cmsRepair.commonFaults) && cmsRepair.commonFaults.length > 0
+    ? cmsRepair.commonFaults.map((f: any, idx: number) => ({
+        title: f.title.startsWith(`${idx + 1}.`) ? f.title : `${idx + 1}. ${f.title}`,
+        desc: f.description || f.desc,
+      }))
+    : defaultFaults;
+
+  const hotline = globalData?.hotline || "0904 000 000";
+  const hotlineTel = hotline.replace(/\s+/g, "");
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#0b0f17] text-slate-900 dark:text-slate-100 flex flex-col justify-between transition-colors duration-200">
-      <Header />
+      <Header globalData={globalData} />
 
       <main className="pt-24 pb-16">
         {/* 1. Hero Header */}
@@ -72,11 +116,11 @@ export default function RepairServicePage() {
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 sm:p-8 shadow-sm space-y-6">
             <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white text-center">
-              Quy Trình 5 Bước Tiếp Nhận &amp; Kiểm Chuẩn Thiết Bị
+              Quy Trình {stepsToRender.length} Bước Tiếp Nhận &amp; Kiểm Chuẩn Thiết Bị
             </h2>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-              {steps.map((s, idx) => (
+              {stepsToRender.map((s: any, idx: number) => (
                 <div
                   key={idx}
                   className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-lg space-y-2 border border-slate-100 dark:border-slate-800"
@@ -101,30 +145,30 @@ export default function RepairServicePage() {
               </h3>
 
               <div className="space-y-3 text-xs">
-                <div className="p-3 rounded-md bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
-                  <p className="font-semibold text-slate-800 dark:text-slate-200">1. Nhiễu tín hiệu BUA / SOS:</p>
-                  <p className="text-slate-500 dark:text-slate-400 mt-0.5">Do suy hao đầu dò siêu âm 0.5MHz hoặc bong bóng khí trong màng dầu.</p>
-                </div>
-
-                <div className="p-3 rounded-md bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
-                  <p className="font-semibold text-slate-800 dark:text-slate-200">2. Màng bóng dầu bị xẹp / không căng:</p>
-                  <p className="text-slate-500 dark:text-slate-400 mt-0.5">Bơm dầu tự động bị kẹt van khí hoặc màng silicon bị chai cứng sau thời gian dài sử dụng.</p>
-                </div>
-
-                <div className="p-3 rounded-md bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
-                  <p className="font-semibold text-slate-800 dark:text-slate-200">3. Lỗi in nhiệt hoặc không kết nối PACS:</p>
-                  <p className="text-slate-500 dark:text-slate-400 mt-0.5">Kẹt trục cuốn giấy in nhiệt 58mm hoặc sai cấu hình IP máy chủ DICOM.</p>
-                </div>
+                {faultsToRender.map((fault: any, idx: number) => (
+                  <div key={idx} className="p-3 rounded-md bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+                    <p className="font-semibold text-slate-800 dark:text-slate-200">{fault.title}</p>
+                    <p className="text-slate-500 dark:text-slate-400 mt-0.5">{fault.desc}</p>
+                  </div>
+                ))}
               </div>
+
+              {/* Warranty Commitment if present */}
+              {cmsRepair?.warrantyCommitment && (
+                <div className="p-3 rounded-md bg-sky-50/60 dark:bg-sky-950/40 border border-sky-200/60 dark:border-sky-800/60 text-xs text-sky-900 dark:text-sky-200 flex items-start gap-2">
+                  <ShieldCheck size={16} className="text-[#0284c7] shrink-0 mt-0.5" />
+                  <p>{cmsRepair.warrantyCommitment}</p>
+                </div>
+              )}
 
               {/* Fast Emergency Contact */}
               <div className="pt-2">
                 <a
-                  href="tel:0904000000"
+                  href={`tel:${hotlineTel}`}
                   className="w-full py-2.5 px-3 bg-rose-600 hover:bg-rose-700 text-white rounded-md text-xs font-semibold flex items-center justify-center gap-2 transition-colors shadow-2xs"
                 >
                   <Phone size={14} />
-                  <span>Hotline Cứu Hộ Thiết Bị: 0904 000 000</span>
+                  <span>Hotline Cứu Hộ Thiết Bị: {hotline}</span>
                 </a>
               </div>
             </div>
@@ -266,7 +310,7 @@ export default function RepairServicePage() {
         </section>
       </main>
 
-      <Footer />
+      <Footer globalData={globalData} />
     </div>
   );
 }

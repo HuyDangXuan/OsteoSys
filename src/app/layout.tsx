@@ -5,6 +5,8 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { UIScaleProvider } from "@/components/providers/ui-scale-provider";
 import { Toaster } from "@/components/ui/toaster";
 
+import { getCmsContent } from "@/lib/actions/cms";
+
 const inter = Inter({
   subsets: ["latin", "vietnamese"],
   variable: "--font-inter",
@@ -12,21 +14,30 @@ const inter = Inter({
   weight: ["300", "400", "500", "600", "700"],
 });
 
-export const metadata: Metadata = {
-  title: "OsteoSys — Giải pháp đo mật độ xương & cơ xương khớp B2B",
-  description:
-    "OsteoSys cung cấp hệ thống thiết bị DEXA, QUS và giải pháp tầm soát sức khỏe xương khớp chuyên nghiệp cho bệnh viện, phòng khám và doanh nghiệp tại Việt Nam.",
-  keywords:
-    "DEXA scanner, đo mật độ xương, BMD, T-score, loãng xương, xương khớp, tầm soát doanh nghiệp, OsteoSys, Sonost 3000",
-  openGraph: {
-    title: "OsteoSys — Chuẩn xác lâm sàng. Mọi lần đo.",
-    description:
-      "Hệ thống đo mật độ xương độ chính xác CV < 1.0%, chuẩn ISCD, tích hợp DICOM 3.0 cho bệnh viện và doanh nghiệp.",
-    type: "website",
-    locale: "vi_VN",
-  },
-  robots: { index: true, follow: true },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const globalContent = await getCmsContent("global");
+  const seo = globalContent.data?.seo;
+  const title = seo?.title || "OsteoSys — Giải pháp đo mật độ xương & cơ xương khớp B2B";
+  const description =
+    seo?.description ||
+    "OsteoSys cung cấp hệ thống thiết bị DEXA, QUS và giải pháp tầm soát sức khỏe xương khớp chuyên nghiệp cho bệnh viện, phòng khám và doanh nghiệp tại Việt Nam.";
+  const ogImage = seo?.ogImage || "/og-image.png";
+
+  return {
+    title,
+    description,
+    keywords:
+      "DEXA scanner, đo mật độ xương, BMD, T-score, loãng xương, xương khớp, tầm soát doanh nghiệp, OsteoSys, Sonost 3000",
+    openGraph: {
+      title,
+      description,
+      type: "website",
+      locale: "vi_VN",
+      images: [ogImage],
+    },
+    robots: { index: true, follow: true },
+  };
+}
 
 export default function RootLayout({
   children,

@@ -32,7 +32,22 @@ const footerNav = [
   },
 ];
 
-export default function Footer() {
+interface FooterProps {
+  globalData?: {
+    hotline?: string;
+    hotlineLabel?: string;
+    email?: string;
+    showroomAddress?: string;
+  };
+}
+
+export default function Footer({ globalData }: FooterProps) {
+  const hotline = globalData?.hotline || "0904 000 000";
+  const hotlineLabel = globalData?.hotlineLabel || "Hotline Kỹ Thuật 24/7";
+  const hotlineTel = hotline.replace(/\s+/g, "");
+  const email = globalData?.email || "info@osteosys.vn";
+  const address = globalData?.showroomAddress || "Tòa nhà Y tế Kỹ thuật cao, Hà Nội & TP. Hồ Chí Minh";
+
   return (
     <footer
       id="about"
@@ -65,22 +80,22 @@ export default function Footer() {
             {/* Contact info */}
             <div className="space-y-2 pt-1 text-slate-300">
               <a
-                href="tel:0904000000"
+                href={`tel:${hotlineTel}`}
                 className="flex items-center gap-2 hover:text-[#0284c7] dark:hover:text-cyan-400 transition-colors"
               >
                 <Phone size={13} className="text-[#0284c7] dark:text-cyan-400" />
-                <span className="font-mono-data font-semibold">0904 000 000 (Hotline Kỹ Thuật 24/7)</span>
+                <span className="font-mono-data font-semibold">{hotline} ({hotlineLabel})</span>
               </a>
               <a
-                href="mailto:info@osteosys.vn"
+                href={`mailto:${email}`}
                 className="flex items-center gap-2 hover:text-[#0284c7] dark:hover:text-cyan-400 transition-colors"
               >
                 <Mail size={13} className="text-[#0284c7] dark:text-cyan-400" />
-                <span>info@osteosys.vn</span>
+                <span>{email}</span>
               </a>
               <div className="flex items-center gap-2 text-slate-400">
                 <MapPin size={13} className="text-[#0284c7] dark:text-cyan-400 shrink-0" />
-                <span>Tòa nhà Y tế Kỹ thuật cao, Hà Nội &amp; TP. Hồ Chí Minh</span>
+                <span>{address}</span>
               </div>
             </div>
           </div>

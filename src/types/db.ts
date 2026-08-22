@@ -9,6 +9,7 @@ export const COLLECTIONS = {
   RENTAL_CONTRACTS: "rental_contracts",
   REPAIR_TICKETS: "repair_tickets",
   AUDIT_LOGS: "audit_logs",
+  CMS_CONTENTS: "cms_contents",
 } as const;
 
 export type CollectionName = (typeof COLLECTIONS)[keyof typeof COLLECTIONS];
@@ -302,3 +303,27 @@ export interface AuditLog {
   errorMessage?: string;
   createdAt: Date;
 }
+
+// 8. CMS Content Model
+export type CmsSectionKey =
+  | "global"
+  | "home_hero"
+  | "sonost_specs"
+  | "rental_packages"
+  | "repair_services"
+  | "faqs"
+  | "clinical_evidence";
+
+export interface CmsContent {
+  _id?: ObjectId;
+  sectionKey: CmsSectionKey;
+  title: string;
+  data: Record<string, any>;
+  lastUpdatedBy: {
+    accountId: string;
+    fullName: string;
+  };
+  updatedAt: Date;
+  createdAt: Date;
+}
+

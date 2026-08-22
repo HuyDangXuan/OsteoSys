@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import Header from "@/components/Header";
@@ -19,10 +19,29 @@ import {
   Loader2,
   FileSpreadsheet,
 } from "lucide-react";
+import { getCmsContent } from "@/lib/actions/cms";
 
 export default function Sonost3000ProductPage() {
-  const [activeTab, setActiveTab] = useState<"measurement" | "hardware" | "software">("measurement");
+  const [activeTab, setActiveTab] = useState<string>("measurement");
   const [downloadProgress, setDownloadProgress] = useState<number | null>(null);
+  const [cmsSpecs, setCmsSpecs] = useState<any>(null);
+  const [globalData, setGlobalData] = useState<any>(null);
+
+  useEffect(() => {
+    async function loadCms() {
+      try {
+        const [specsRes, globalRes] = await Promise.all([
+          getCmsContent("sonost_specs"),
+          getCmsContent("global"),
+        ]);
+        setCmsSpecs(specsRes.data);
+        setGlobalData(globalRes.data);
+      } catch (e) {
+        console.error("Failed to load CMS specs:", e);
+      }
+    }
+    loadCms();
+  }, []);
 
   const handleDownloadBrochure = () => {
     setDownloadProgress(0);
@@ -30,7 +49,11 @@ export default function Sonost3000ProductPage() {
       setDownloadProgress((prev) => {
         if (prev === null || prev >= 100) {
           clearInterval(interval);
-          setTimeout(() => setDownloadProgress(null), 1200);
+          setTimeout(() => {
+            setDownloadProgress(null);
+            const brochureUrl = cmsSpecs?.brochureUrl || "/catalog-osteosys.pdf";
+            window.open(brochureUrl, "_blank");
+          }, 600);
           return 100;
         }
         return prev + 25;
@@ -38,7 +61,7 @@ export default function Sonost3000ProductPage() {
     }, 150);
   };
 
-  const specs = {
+  const defaultSpecs = {
     measurement: [
       { label: "Vị trí đo lường (Measurement Site)", value: "Gót chân (Xương gót Calcaneus)" },
       { label: "Thông số lâm sàng (Clinical Parameters)", value: "SOS (Vận tốc âm), BUA (Độ suy giảm dải rộng), BQI (Chỉ số chất lượng xương)" },
@@ -65,9 +88,27 @@ export default function Sonost3000ProductPage() {
     ],
   };
 
+  // Convert cms specGroups into map or fallback
+  const specGroupsMap: Record<string, Array<{ label: string; value: string }>> = { ...defaultSpecs };
+  if (cmsSpecs?.specGroups && Array.isArray(cmsSpecs.specGroups)) {
+    cmsSpecs.specGroups.forEach((g: any) => {
+      if (g.groupKey && g.items) {
+        specGroupsMap[g.groupKey] = g.items;
+      }
+    });
+  }
+
+  const deliverables = cmsSpecs?.deliverables || [
+    "01 Thân máy Sonost 3000 chính hãng OsteoSys",
+    "01 Khối chuẩn Phantom hiệu chuẩn hàng ngày",
+    "05 Cuộn giấy in nhiệt + 02 Can gel siêu âm y tế",
+  ];
+
+  const currentSpecs = specGroupsMap[activeTab] || specGroupsMap.measurement || [];
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#0b0f17] text-slate-900 dark:text-slate-100 flex flex-col justify-between transition-colors duration-200">
-      <Header />
+      <Header globalData={globalData} />
 
       <main className="pt-24 pb-16">
         {/* 1. Hero Section */}
@@ -170,9 +211,9 @@ export default function Sonost3000ProductPage() {
 
                 <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-md text-xs text-slate-600 dark:text-slate-300 space-y-1">
                   <p className="font-semibold text-slate-900 dark:text-slate-100">Bàn giao bao gồm:</p>
-                  <p>• 01 Thân máy Sonost 3000 chính hãng OsteoSys</p>
-                  <p>• 01 Khối chuẩn Phantom hiệu chuẩn hàng ngày</p>
-                  <p>• 05 Cuộn giấy in nhiệt + 02 Can gel siêu âm y tế</p>
+                  {deliverables.map((item: string, idx: number) => (
+                    <p key={idx}>• {item}</p>
+                  ))}
                 </div>
               </div>
             </motion.div>
@@ -293,7 +334,7 @@ export default function Sonost3000ProductPage() {
                   transition={{ duration: 0.2 }}
                   className="space-y-0"
                 >
-                  {specs[activeTab].map((row, idx) => (
+                  {currentSpecs.map((row: any, idx: number) => (
                     <div
                       key={idx}
                       className="py-3 px-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2 hover:bg-slate-50 dark:hover:bg-slate-800/40 rounded transition-colors"
@@ -313,7 +354,7 @@ export default function Sonost3000ProductPage() {
         </section>
       </main>
 
-      <Footer />
+      <Footer globalData={globalData} />
     </div>
   );
 }

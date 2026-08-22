@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, Suspense } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Header from "@/components/Header";
@@ -17,6 +17,7 @@ import {
   Radio,
   Sparkles,
 } from "lucide-react";
+import { getCmsContent } from "@/lib/actions/cms";
 
 function QuoteFormContent() {
   const searchParams = useSearchParams();
@@ -36,6 +37,19 @@ function QuoteFormContent() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [globalData, setGlobalData] = useState<any>(null);
+
+  useEffect(() => {
+    async function loadGlobal() {
+      try {
+        const res = await getCmsContent("global");
+        setGlobalData(res.data);
+      } catch (e) {
+        console.error("Failed to load global CMS data:", e);
+      }
+    }
+    loadGlobal();
+  }, []);
 
   const services = [
     { id: "rental", label: "🏢 Thuê máy Sonost 3000 (0đ vốn ban đầu)" },
@@ -55,7 +69,7 @@ function QuoteFormContent() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#0b0f17] text-slate-900 dark:text-slate-100 flex flex-col justify-between transition-colors duration-200">
-      <Header />
+      <Header globalData={globalData} />
 
       <main className="pt-24 pb-16">
         {/* 1. Header Hero */}
@@ -256,7 +270,7 @@ function QuoteFormContent() {
         </section>
       </main>
 
-      <Footer />
+      <Footer globalData={globalData} />
     </div>
   );
 }

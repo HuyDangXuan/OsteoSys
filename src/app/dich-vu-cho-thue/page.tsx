@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import Header from "@/components/Header";
@@ -17,17 +17,19 @@ import {
   Users,
   Award,
 } from "lucide-react";
+import { getCmsContent } from "@/lib/actions/cms";
 
 export default function RentalServicePage() {
-  const [selectedMonths, setSelectedMonths] = useState(6);
+  const [cmsPackages, setCmsPackages] = useState<any[]>([]);
+  const [globalData, setGlobalData] = useState<any>(null);
 
-  const packages = [
+  const defaultPackages = [
     {
       id: "event",
       name: "Gói Khám Đoàn / Sự Kiện",
       tagline: "Dành cho chiến dịch khám sức khỏe lưu động doanh nghiệp",
-      price: "1.500.000 đ",
-      unit: "/ ngày",
+      price: "1.500.000",
+      unit: "đ / ngày",
       badge: "Linh Hoạt 24h",
       badgeColor: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300",
       features: [
@@ -37,13 +39,14 @@ export default function RentalServicePage() {
         "Hỗ trợ máy dự phòng trong 30 phút tại HN & TP.HCM",
       ],
       popular: false,
+      ctaUrl: "/bao-gia?package=event",
     },
     {
       id: "clinic",
       name: "Gói Phòng Khám Tiêu Chuẩn",
       tagline: "Tối ưu chi phí đầu tư ban đầu cho phòng khám đa khoa",
-      price: "15.000.000 đ",
-      unit: "/ tháng",
+      price: "15.000.000",
+      unit: "đ / tháng",
       badge: "Phổ Biến Nhất",
       badgeColor: "bg-sky-100 text-[#0284c7] dark:bg-sky-950 dark:text-sky-300",
       features: [
@@ -54,13 +57,14 @@ export default function RentalServicePage() {
         "Hỗ trợ kỹ thuật 24/7 từ kỹ sư OsteoSys",
       ],
       popular: true,
+      ctaUrl: "/bao-gia?package=clinic",
     },
     {
       id: "hospital",
       name: "Gói Bệnh Viện Dài Hạn",
       tagline: "Hợp đồng từ 12 tháng trở lên với nhiều đặc quyền B2B",
-      price: "13.500.000 đ",
-      unit: "/ tháng",
+      price: "13.500.000",
+      unit: "đ / tháng",
       badge: "Tiết Kiệm 15%",
       badgeColor: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300",
       features: [
@@ -71,12 +75,50 @@ export default function RentalServicePage() {
         "Chuyển giao quyền sở hữu sau 36 tháng thuê",
       ],
       popular: false,
+      ctaUrl: "/bao-gia?package=hospital",
     },
   ];
 
+  useEffect(() => {
+    async function loadCms() {
+      try {
+        const [pkgRes, globalRes] = await Promise.all([
+          getCmsContent("rental_packages"),
+          getCmsContent("global"),
+        ]);
+        if (pkgRes.data?.packages && Array.isArray(pkgRes.data.packages) && pkgRes.data.packages.length > 0) {
+          const mapped = pkgRes.data.packages.map((p: any) => ({
+            id: p.id || "pkg",
+            name: p.name,
+            tagline: p.tagline || "",
+            price: p.price,
+            unit: p.priceUnit || "đ / tháng",
+            badge: p.badge || "Gói Thuê",
+            badgeColor: p.isPopular
+              ? "bg-sky-100 text-[#0284c7] dark:bg-sky-950 dark:text-sky-300"
+              : "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300",
+            features: p.features || [],
+            popular: p.isPopular || false,
+            ctaUrl: p.ctaUrl || `/bao-gia?package=${p.id}`,
+          }));
+          setCmsPackages(mapped);
+        } else {
+          setCmsPackages(defaultPackages);
+        }
+        setGlobalData(globalRes.data);
+      } catch (e) {
+        console.error("Failed to load rental packages CMS:", e);
+        setCmsPackages(defaultPackages);
+      }
+    }
+    loadCms();
+  }, []);
+
+  const packagesToRender = cmsPackages.length > 0 ? cmsPackages : defaultPackages;
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#0b0f17] text-slate-900 dark:text-slate-100 flex flex-col justify-between transition-colors duration-200">
-      <Header />
+      <Header globalData={globalData} />
 
       <main className="pt-24 pb-16">
         {/* 1. Header Hero */}
@@ -98,7 +140,7 @@ export default function RentalServicePage() {
         {/* 2. 3 Rental Packages Grid */}
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
-            {packages.map((pkg, idx) => (
+            {packagesToRender.map((pkg, idx) => (
               <motion.div
                 key={pkg.id}
                 initial={{ opacity: 0, y: 15 }}
@@ -128,9 +170,11 @@ export default function RentalServicePage() {
                     <h3 className="text-lg font-bold text-slate-900 dark:text-white">
                       {pkg.name}
                     </h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                      {pkg.tagline}
-                    </p>
+                    {pkg.tagline && (
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                        {pkg.tagline}
+                      </p>
+                    )}
                   </div>
 
                   <div className="pt-2 flex items-baseline gap-1">
@@ -144,7 +188,7 @@ export default function RentalServicePage() {
 
                   {/* Bullet points */}
                   <div className="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-2.5 text-xs">
-                    {pkg.features.map((feat, i) => (
+                    {(pkg.features || []).map((feat: string, i: number) => (
                       <div key={i} className="flex items-start gap-2 text-slate-700 dark:text-slate-300">
                         <CheckCircle2 size={15} className="text-[#0284c7] shrink-0 mt-0.5" />
                         <span>{feat}</span>
@@ -155,7 +199,7 @@ export default function RentalServicePage() {
 
                 <div className="pt-6">
                   <Link
-                    href={`/bao-gia?package=${pkg.id}`}
+                    href={pkg.ctaUrl || `/bao-gia?package=${pkg.id}`}
                     className={`w-full py-2.5 px-4 rounded-md text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors ${
                       pkg.popular
                         ? "bg-[#0284c7] hover:bg-[#0369a1] text-white shadow-sm"
@@ -196,7 +240,7 @@ export default function RentalServicePage() {
         </section>
       </main>
 
-      <Footer />
+      <Footer globalData={globalData} />
     </div>
   );
 }

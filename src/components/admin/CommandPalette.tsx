@@ -83,6 +83,15 @@ export default function CommandPalette() {
       icon: Users,
     },
     {
+      id: "nav-cms",
+      category: "Điều hướng",
+      title: "Quản trị Nội dung Website (CMS)",
+      subtitle: "Tùy biến nội dung, thông số kỹ thuật, bảng giá thuê máy và SEO",
+      href: "/admin/cms",
+      icon: FileText,
+      badge: "Dynamic CMS",
+    },
+    {
       id: "nav-accounts",
       category: "Điều hướng",
       title: "Quản lý Tài khoản & Phân quyền",

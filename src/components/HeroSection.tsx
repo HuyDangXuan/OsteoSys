@@ -14,7 +14,37 @@ const SCAN_METRICS = [
   { label: "T-score Gót chân", value: "−1.1", unit: "SD" },
 ];
 
-export default function HeroSection() {
+interface HeroSectionProps {
+  data?: {
+    badge?: string;
+    headline?: string;
+    description?: string;
+    heroImageUrl?: string;
+    cta1?: { label?: string; url?: string };
+    cta2?: { label?: string; url?: string };
+    pillars?: Array<{ icon?: string; title: string; description: string }>;
+    scanMetrics?: Array<{ label: string; value: string; unit: string }>;
+  };
+}
+
+export default function HeroSection({ data }: HeroSectionProps) {
+  const badge = data?.badge || "Máy Đo Loãng Xương Siêu Âm Y Khoa";
+  const headline = data?.headline || "Chẩn đoán loãng xương chuẩn xác. An toàn tuyệt đối 0% tia X.";
+  const description = data?.description || "Giải pháp thiết bị đo mật độ xương siêu âm gót chân Sonost 3000 (OsteoSys Korea). Thời gian đo dưới 15 giây, tích hợp máy in nhiệt, phù hợp khám lưu động và phòng khám đa khoa.";
+  const cta1 = data?.cta1 || { label: "Nhận Báo Giá & Tư Vấn Thuê Máy", url: "/bao-gia" };
+  const cta2 = data?.cta2 || { label: "Xem Chi Tiết Sonost 3000", url: "/san-pham/sonost-3000" };
+  const scanMetrics = data?.scanMetrics && data.scanMetrics.length > 0 ? data.scanMetrics : SCAN_METRICS;
+
+  const defaultPillars = [
+    { metric: "Độ chính xác lặp lại (CV)", value: "< 1.5 %", note: "Chuẩn ISCD & WHO quốc tế" },
+    { metric: "Thời gian thực hiện phép đo", value: "< 15 giây", note: "Nhanh gấp 4 lần phương pháp truyền thống" },
+    { metric: "An toàn bức xạ", value: "0 Rad / Không tia X", note: "Đo an toàn cho phụ nữ có thai & trẻ em" },
+  ];
+
+  const pillarsToRender = data?.pillars && data.pillars.length > 0
+    ? data.pillars.map((p) => ({ metric: p.title, value: p.description, note: "" }))
+    : defaultPillars;
+
   return (
     <section
       id="hero"
@@ -37,60 +67,52 @@ export default function HeroSection() {
             <div className="flex items-center gap-2">
               <div className="h-px w-8 bg-[#0284c7] dark:bg-cyan-400" />
               <span className="text-xs font-bold uppercase tracking-widest text-[#0284c7] dark:text-cyan-400 font-mono-data">
-                Máy Đo Loãng Xương Siêu Âm Y Khoa
+                {badge}
               </span>
             </div>
 
             {/* Headline */}
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-[1.15] text-slate-900 dark:text-slate-100 tracking-tight">
-              Chẩn đoán loãng xương chuẩn xác.{" "}
-              <span className="text-[#0284c7] dark:text-cyan-400 block sm:inline">
-                An toàn tuyệt đối 0% tia X.
-              </span>
+              {headline}
             </h1>
 
             <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed max-w-xl">
-              Giải pháp thiết bị đo mật độ xương siêu âm gót chân <strong>Sonost 3000 (OsteoSys Korea)</strong>.
-              Thời gian đo dưới 15 giây, tích hợp máy in nhiệt, phù hợp khám lưu động và phòng khám đa khoa.
+              {description}
             </p>
 
             {/* CTAs */}
             <div className="flex flex-col sm:flex-row gap-3 pt-1">
               <motion.div whileTap={{ scale: 0.98 }}>
                 <Link
-                  href="/bao-gia"
+                  href={cta1.url || "/bao-gia"}
                   className="flex items-center justify-center gap-2 px-5 py-3 bg-[#0284c7] hover:bg-[#0369a1] dark:bg-cyan-600 dark:hover:bg-cyan-500 text-white text-xs font-bold uppercase tracking-wider rounded-md transition-colors shadow-sm"
                 >
-                  <span>Nhận Báo Giá &amp; Tư Vấn Thuê Máy</span>
+                  <span>{cta1.label || "Nhận Báo Giá & Tư Vấn Thuê Máy"}</span>
                   <ChevronRight size={15} />
                 </Link>
               </motion.div>
 
               <motion.div whileTap={{ scale: 0.98 }}>
                 <Link
-                  href="/san-pham/sonost-3000"
+                  href={cta2.url || "/san-pham/sonost-3000"}
                   className="flex items-center justify-center gap-2 px-5 py-3 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-md hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors"
                 >
                   <Radio size={14} className="text-[#0284c7] dark:text-cyan-400" />
-                  <span>Xem Chi Tiết Sonost 3000</span>
+                  <span>{cta2.label || "Xem Chi Tiết Sonost 3000"}</span>
                 </Link>
               </motion.div>
             </div>
 
             {/* 3 Quick Data Rows */}
             <div className="border border-slate-200 dark:border-slate-800 rounded-lg divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-slate-900/80 backdrop-blur-xs text-xs shadow-2xs">
-              {[
-                { metric: "Độ chính xác lặp lại (CV)", value: "< 1.5 %", note: "Chuẩn ISCD & WHO quốc tế" },
-                { metric: "Thời gian thực hiện phép đo", value: "< 15 giây", note: "Nhanh gấp 4 lần phương pháp truyền thống" },
-                { metric: "An toàn bức xạ", value: "0 Rad / Không tia X", note: "Đo an toàn cho phụ nữ có thai & trẻ em" },
-              ].map((row) => (
+              {pillarsToRender.map((row) => (
                 <div
                   key={row.metric}
                   className="flex items-center justify-between px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
                 >
                   <div>
                     <span className="font-semibold text-slate-800 dark:text-slate-200">{row.metric}</span>
-                    <span className="text-slate-400 text-xs ml-2 hidden sm:inline">({row.note})</span>
+                    {row.note && <span className="text-slate-400 text-xs ml-2 hidden sm:inline">({row.note})</span>}
                   </div>
                   <span className="font-mono-data font-bold text-[#0284c7] dark:text-cyan-400 text-sm">
                     {row.value}
@@ -126,7 +148,7 @@ export default function HeroSection() {
                   </span>
                 </div>
                 <div className="grid grid-cols-3 gap-2">
-                  {SCAN_METRICS.map((m) => (
+                  {scanMetrics.map((m) => (
                     <div key={m.label} className="border-r border-slate-100 dark:border-slate-800 last:border-0 pr-2">
                       <p className="font-mono-data tabular-nums text-base font-bold text-[#0284c7] dark:text-cyan-400 leading-none">
                         {m.value}

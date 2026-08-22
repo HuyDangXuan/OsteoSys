@@ -21,6 +21,7 @@ import {
   X,
   Building2,
   ShieldAlert,
+  Globe,
 } from "lucide-react";
 import { useAdmin } from "./AdminThemeContext";
 import { useAuth } from "@/components/providers/auth-provider";
@@ -72,6 +73,11 @@ const navItems: NavItem[] = [
     href: "/admin/khach-hang",
     aliases: ["/admin/partners"],
     icon: Building2,
+  },
+  {
+    name: "Quản trị CMS",
+    href: "/admin/cms",
+    icon: Globe,
   },
   {
     name: "Tài khoản",
