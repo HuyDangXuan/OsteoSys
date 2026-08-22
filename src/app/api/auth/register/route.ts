@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { registerSchema } from "@/lib/auth-schema";
+import { registerUser } from "@/lib/actions/auth";
 
 export async function POST(request: Request) {
   try {
@@ -17,21 +18,25 @@ export async function POST(request: Request) {
       );
     }
 
-    const { organization, email } = result.data;
-    // Generate a reference code for the clinical onboarding dossier
-    const referenceId = `OST-ACC-${Math.floor(1000 + Math.random() * 9000)}`;
+    const { fullName, email, phone, organization, password } = result.data;
 
-    return NextResponse.json({
-      success: true,
-      message: "Đăng ký hồ sơ đối tác y tế thành công",
-      referenceId,
-      organization,
+    const regRes = await registerUser({
+      fullName,
       email,
-      redirectUrl: `/pending-activation?ref=${referenceId}&org=${encodeURIComponent(organization)}`,
+      phone,
+      clinicName: organization,
+      password,
     });
+
+    if (!regRes.success) {
+      return NextResponse.json(regRes, { status: 400 });
+    }
+
+    return NextResponse.json(regRes, { status: 201 });
   } catch (error) {
+    console.error("Error in /api/auth/register:", error);
     return NextResponse.json(
-      { success: false, message: "Lỗi xử lý đăng ký." },
+      { success: false, message: "Lỗi xử lý đăng ký tài khoản." },
       { status: 500 }
     );
   }

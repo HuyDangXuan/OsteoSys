@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion, AnimatePresence } from "framer-motion";
@@ -28,8 +28,12 @@ import {
   scaleInSuccessVariants,
 } from "@/lib/auth-motion";
 
-export default function ResetPasswordPage() {
+function ResetPasswordForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const token = searchParams.get("token") || "";
+  const email = searchParams.get("email") || "";
+
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
@@ -57,7 +61,11 @@ export default function ResetPasswordPage() {
       const response = await fetch("/api/auth/reset-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          ...data,
+          token,
+          email,
+        }),
       });
 
       const result = await response.json();
@@ -97,39 +105,37 @@ export default function ResetPasswordPage() {
         </p>
       </motion.div>
 
-      {/* Success Banner with Scale-in Animation */}
+      {/* Success Banner */}
       <AnimatePresence>
         {isSuccess && (
           <motion.div
             variants={scaleInSuccessVariants}
             initial="hidden"
             animate="visible"
-            className="mb-5 p-4 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 rounded-lg text-xs text-emerald-800 dark:text-emerald-300 flex items-center gap-3"
+            className="mb-6 p-4 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 rounded-lg text-xs text-emerald-900 dark:text-emerald-300 flex items-center gap-3"
           >
-            <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900 text-emerald-600 dark:text-emerald-300 flex items-center justify-center shrink-0">
-              <CheckCircle2 size={18} />
-            </div>
+            <CheckCircle2 size={20} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
             <div>
-              <span className="font-bold block text-emerald-900 dark:text-emerald-200">
-                Đặt lại mật khẩu thành công!
-              </span>
-              <span>Đang tự động chuyển hướng về trang đăng nhập...</span>
+              <p className="font-bold">Đổi mật khẩu thành công!</p>
+              <p className="text-emerald-700 dark:text-emerald-400 mt-0.5">
+                Đang chuyển hướng về trang đăng nhập trong giây lát...
+              </p>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Server Error Alert with Shake */}
+      {/* Server Error Alert */}
       <AnimatePresence>
         {serverError && (
           <motion.div
             variants={errorShakeVariants}
-            initial="idle"
-            animate="shake"
+            initial="hidden"
+            animate="visible"
             exit={{ opacity: 0, height: 0 }}
-            className="mb-5 p-3.5 bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 rounded-lg text-xs text-rose-800 dark:text-rose-300 flex items-start gap-2.5"
+            className="mb-4 p-3 bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800/80 rounded-md text-xs text-rose-700 dark:text-rose-300 flex items-center gap-2"
           >
-            <AlertCircle size={16} className="text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
+            <AlertCircle size={15} className="shrink-0 text-rose-600 dark:text-rose-400" />
             <span>{serverError}</span>
           </motion.div>
         )}
@@ -140,7 +146,7 @@ export default function ResetPasswordPage() {
         {/* New Password */}
         <motion.div variants={formItemVariants} className="space-y-1">
           <label
-            htmlFor="reset-password"
+            htmlFor="reset-pass"
             className="block text-xs font-semibold text-slate-700 dark:text-slate-300"
           >
             Mật khẩu mới <span className="text-[#0284c7]">*</span>
@@ -150,11 +156,10 @@ export default function ResetPasswordPage() {
               <Lock size={16} />
             </div>
             <input
-              id="reset-password"
+              id="reset-pass"
               type={showPassword ? "text" : "password"}
               autoComplete="new-password"
-              autoFocus
-              placeholder="Tối thiểu 8 ký tự, chữ hoa, số & ký tự đặc biệt"
+              placeholder="Tối thiểu 8 ký tự, 1 hoa, 1 số, 1 ký tự đặc biệt"
               {...register("password")}
               className={`w-full pl-9 pr-10 py-2.5 text-xs bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 border rounded-md outline-none transition-colors ${
                 errors.password
@@ -166,34 +171,28 @@ export default function ResetPasswordPage() {
               type="button"
               onClick={() => setShowPassword(!showPassword)}
               className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-              tabIndex={-1}
             >
               {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
           </div>
 
-          {/* Smooth Animated Password Strength Indicator */}
+          {/* Password strength indicator */}
           {passwordValue && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              className="pt-1.5 space-y-1"
-            >
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-500 dark:text-slate-400 font-medium">Độ bảo mật:</span>
-                <span className={`font-semibold font-mono-data ${passwordStrength.color.replace('bg-', 'text-')}`}>
+            <div className="space-y-1 pt-1">
+              <div className="flex justify-between items-center text-[10px]">
+                <span className="text-slate-500">Độ mạnh mật khẩu:</span>
+                <span className="font-semibold text-slate-700 dark:text-slate-300">
                   {passwordStrength.label}
                 </span>
               </div>
-              <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
+              <div className="h-1 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                 <motion.div
-                  className={`h-full ${passwordStrength.color}`}
                   initial={{ width: 0 }}
                   animate={{ width: passwordStrength.width }}
-                  transition={{ duration: 0.3, ease: "easeOut" }}
+                  className={`h-full ${passwordStrength.color} transition-all duration-300`}
                 />
               </div>
-            </motion.div>
+            </div>
           )}
 
           {errors.password && (
@@ -207,23 +206,23 @@ export default function ResetPasswordPage() {
           )}
         </motion.div>
 
-        {/* Confirm New Password */}
+        {/* Confirm Password */}
         <motion.div variants={formItemVariants} className="space-y-1">
           <label
-            htmlFor="reset-confirmPassword"
+            htmlFor="reset-confirm"
             className="block text-xs font-semibold text-slate-700 dark:text-slate-300"
           >
-            Nhập lại mật khẩu mới <span className="text-[#0284c7]">*</span>
+            Xác nhận lại mật khẩu mới <span className="text-[#0284c7]">*</span>
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
               <Lock size={16} />
             </div>
             <input
-              id="reset-confirmPassword"
+              id="reset-confirm"
               type={showConfirmPassword ? "text" : "password"}
               autoComplete="new-password"
-              placeholder="Xác nhận mật khẩu mới vừa nhập"
+              placeholder="Nhập lại chính xác mật khẩu trên"
               {...register("confirmPassword")}
               className={`w-full pl-9 pr-10 py-2.5 text-xs bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 border rounded-md outline-none transition-colors ${
                 errors.confirmPassword
@@ -235,7 +234,6 @@ export default function ResetPasswordPage() {
               type="button"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
               className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-              tabIndex={-1}
             >
               {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
@@ -251,6 +249,7 @@ export default function ResetPasswordPage() {
           )}
         </motion.div>
 
+        {/* Submit */}
         <motion.div variants={formItemVariants} className="pt-2">
           <motion.button
             whileTap={{ scale: 0.98 }}
@@ -265,7 +264,7 @@ export default function ResetPasswordPage() {
               </>
             ) : (
               <>
-                <span>Lưu mật khẩu mới &amp; Đăng nhập</span>
+                <span>Cập nhật mật khẩu mới</span>
                 <ArrowRight size={15} />
               </>
             )}
@@ -273,7 +272,7 @@ export default function ResetPasswordPage() {
         </motion.div>
       </form>
 
-      {/* Back to Login Link */}
+      {/* Back to Login */}
       <motion.div variants={formItemVariants} className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 text-center">
         <Link
           href="/login"
@@ -283,5 +282,19 @@ export default function ResetPasswordPage() {
         </Link>
       </motion.div>
     </motion.div>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-8 shadow-sm flex items-center justify-center py-16">
+          <Loader2 className="animate-spin text-[#0284c7]" size={24} />
+        </div>
+      }
+    >
+      <ResetPasswordForm />
+    </Suspense>
   );
 }

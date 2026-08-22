@@ -33,6 +33,7 @@ import { toast } from "sonner";
 import { SkeletonDeviceCard, SkeletonDataTable } from "@/components/ui/skeleton";
 import { TableEmptyState } from "@/components/admin/TableStates";
 import { DynamicStatCards, DeviceStatsData } from "@/components/admin/DynamicStatCards";
+import { StatusBadge } from "@/components/ui/status-badge";
 import {
   getDevices,
   createDevice,
@@ -576,21 +577,7 @@ export default function InventoryManagementPage() {
                     </p>
                   </div>
 
-                  <span
-                    className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${
-                      d.status === "available"
-                        ? "bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/40"
-                        : d.status === "rented"
-                        ? "bg-sky-50 dark:bg-cyan-950/70 text-[#0284c7] dark:text-cyan-400 border-sky-200 dark:border-cyan-800/40"
-                        : d.status === "under_maintenance"
-                        ? "bg-amber-50 dark:bg-amber-950/70 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800/40"
-                        : d.status === "repairing"
-                        ? "bg-rose-50 dark:bg-rose-950/70 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800/40"
-                        : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700"
-                    }`}
-                  >
-                    {d.statusLabel}
-                  </span>
+                  <StatusBadge status={d.status} label={d.statusLabel} />
                 </div>
 
                 {/* Location & Calibration details */}
@@ -687,22 +674,8 @@ export default function InventoryManagementPage() {
                     <td className="py-3 px-4 font-medium text-slate-700 dark:text-slate-300">
                       {d.location}
                     </td>
-                    <td className="py-3 px-4">
-                      <span
-                        className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${
-                          d.status === "available"
-                            ? "bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/40"
-                            : d.status === "rented"
-                            ? "bg-sky-50 dark:bg-cyan-950/70 text-[#0284c7] dark:text-cyan-400 border-sky-200 dark:border-cyan-800/40"
-                            : d.status === "under_maintenance"
-                            ? "bg-amber-50 dark:bg-amber-950/70 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800/40"
-                            : d.status === "repairing"
-                            ? "bg-rose-50 dark:bg-rose-950/70 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800/40"
-                            : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700"
-                        }`}
-                      >
-                        {d.statusLabel}
-                      </span>
+                    <td className="py-3 px-4 whitespace-nowrap min-w-fit">
+                      <StatusBadge status={d.status} label={d.statusLabel} />
                     </td>
                     <td className="py-3 px-4 font-mono-data">
                       <span className="text-emerald-600 dark:text-emerald-400 font-semibold">{d.cvScore}</span>

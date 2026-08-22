@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -9,11 +9,16 @@ import {
   ChevronRight,
   Plus,
   Radio,
+  Users,
+  Shield,
 } from "lucide-react";
 import { useAdmin } from "./AdminThemeContext";
 import NotificationDropdown from "./NotificationDropdown";
 import UserMenu from "./UserMenu";
 import { ThemeSelectDropdown } from "@/components/ui/theme-toggle";
+import { UIScaleDropdown } from "@/components/admin/UIScaleDropdown";
+import { AccountManagementDrawer } from "@/components/admin/account-management-drawer";
+import { getAccounts } from "@/lib/actions/accounts";
 
 const routeNames: Record<string, { label: string; parent?: string }> = {
   "/admin": { label: "Tổng quan Dashboard" },
@@ -24,12 +29,31 @@ const routeNames: Record<string, { label: string; parent?: string }> = {
   "/admin/kho-thiet-bi": { label: "Kho thiết bị & Linh kiện" },
   "/admin/inventory": { label: "Kho Thiết Bị & Kiểm Định" },
   "/admin/khach-hang": { label: "Danh sách Khách hàng B2B" },
+  "/admin/partners": { label: "Danh sách Khách hàng B2B" },
+  "/admin/accounts": { label: "Quản lý Tài khoản & Phân quyền" },
+  "/admin/tai-khoan": { label: "Quản lý Tài khoản & Phân quyền" },
   "/admin/cai-dat": { label: "Cài đặt Hệ thống" },
+  "/admin/settings": { label: "Cài đặt & Tùy biến Hệ thống" },
 };
 
 export default function AdminTopbar() {
   const pathname = usePathname();
   const { isSidebarCollapsed, setMobileSidebarOpen, setCommandPaletteOpen } = useAdmin();
+  const [isAccountDrawerOpen, setIsAccountDrawerOpen] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
+
+  const fetchPendingCount = useCallback(async () => {
+    try {
+      const res = await getAccounts({ status: "pending", limit: 1 });
+      setPendingCount(res.counts.pending);
+    } catch {
+      // Non-blocking catch
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchPendingCount();
+  }, [fetchPendingCount]);
 
   const currentRoute = routeNames[pathname] || { label: "Quản trị" };
 
@@ -100,6 +124,24 @@ export default function AdminTopbar() {
             <Search size={18} />
           </button>
 
+          {/* Super Admin Account Management Button with Pending Badge Counter */}
+          <button
+            onClick={() => setIsAccountDrawerOpen(true)}
+            className="relative p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors"
+            title="Quản trị tài khoản & nhân sự Super Admin"
+            aria-label="Quản lý tài khoản"
+          >
+            <Users size={17} />
+            {pendingCount > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-amber-500 text-white font-mono-data text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white dark:border-[#0b0f17] animate-pulse">
+                {pendingCount}
+              </span>
+            )}
+          </button>
+
+          {/* UI Zoom Scale Controller (85% -> 125%) */}
+          <UIScaleDropdown className="hidden sm:inline-flex" />
+
           {/* Theme Selector (Light / Dark / System) */}
           <ThemeSelectDropdown className="hidden sm:inline-flex" />
 
@@ -121,6 +163,13 @@ export default function AdminTopbar() {
           <UserMenu />
         </div>
       </div>
+
+      {/* Account Management Right Sidebar Drawer */}
+      <AccountManagementDrawer
+        isOpen={isAccountDrawerOpen}
+        onClose={() => setIsAccountDrawerOpen(false)}
+        onRefresh={fetchPendingCount}
+      />
     </header>
   );
 }

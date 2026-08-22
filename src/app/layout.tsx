@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
+import { UIScaleProvider } from "@/components/providers/ui-scale-provider";
 import { Toaster } from "@/components/ui/toaster";
 
 const inter = Inter({
@@ -38,6 +39,7 @@ export default function RootLayout({
             __html: `
               (function() {
                 try {
+                  // 1. Clean attribute mutations
                   var clean = function(node) {
                     if (node && node.nodeType === 1) {
                       if (node.hasAttribute('bis_skin_checked')) node.removeAttribute('bis_skin_checked');
@@ -64,6 +66,21 @@ export default function RootLayout({
                     childList: true,
                     attributeFilter: ['bis_skin_checked', 'bis_register']
                   });
+
+                  // 2. Early UI scale initialization to eliminate layout shift / hydration flash
+                  var scale = 100;
+                  var cookieMatch = document.cookie.match(new RegExp('(?:^|; )sonost_ui_scale=([^;]*)'));
+                  if (cookieMatch && cookieMatch[1]) {
+                    scale = parseInt(cookieMatch[1], 10);
+                  } else {
+                    var local = localStorage.getItem('sonost_ui_scale');
+                    if (local) scale = parseInt(local, 10);
+                  }
+                  var scaleMap = { 85: '13.6px', 90: '14.4px', 100: '16px', 110: '17.6px', 125: '20px' };
+                  if (scaleMap[scale]) {
+                    document.documentElement.style.fontSize = scaleMap[scale];
+                    document.documentElement.setAttribute('data-ui-scale', String(scale));
+                  }
                 } catch (e) {}
               })();
             `,
@@ -75,8 +92,10 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <ThemeProvider>
-          <div className="min-h-screen flex flex-col">{children}</div>
-          <Toaster />
+          <UIScaleProvider>
+            <div className="min-h-screen flex flex-col">{children}</div>
+            <Toaster />
+          </UIScaleProvider>
         </ThemeProvider>
       </body>
     </html>

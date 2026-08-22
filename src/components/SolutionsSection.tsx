@@ -78,7 +78,7 @@ const enterprisePackages = [
     tagline: "300–2.000 nhân viên",
     price: "Liên hệ báo giá ưu đãi",
     highlight: true,
-    badge: "Doanh Nghiệp Ưa Chuộng",
+    badge: "Doanh Nghiệp",
     items: [
       "Cung cấp đồng thời 2–4 máy Sonost 3000",
       "Bác sĩ & kỹ thuật viên y sinh hỗ trợ trực tiếp",

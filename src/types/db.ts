@@ -14,8 +14,16 @@ export const COLLECTIONS = {
 export type CollectionName = (typeof COLLECTIONS)[keyof typeof COLLECTIONS];
 
 // 1. Account Model
-export type AccountRole = "super_admin" | "sales" | "technician";
+export type AccountRole = "super_admin" | "sales" | "technician" | "support";
 export type AccountStatus = "active" | "pending" | "suspended";
+
+export interface AccountAppeal {
+  note: string;
+  contactPhone?: string;
+  contactEmail?: string;
+  submittedAt: Date;
+  resolved?: boolean;
+}
 
 export interface Account {
   _id?: ObjectId;
@@ -23,9 +31,16 @@ export interface Account {
   passwordHash: string;
   fullName: string;
   phone?: string;
+  clinicName?: string;
   avatarUrl?: string;
   role: AccountRole;
   status: AccountStatus;
+  suspensionReason?: string | null;
+  suspendedAt?: Date | null;
+  resetPasswordToken?: string | null;
+  resetPasswordExpires?: Date | null;
+  failedLoginAttempts?: number;
+  appealNotes?: AccountAppeal[];
   refreshToken?: string | null;
   lastLoginAt?: Date | null;
   createdAt: Date;

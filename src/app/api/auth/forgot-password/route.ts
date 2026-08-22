@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { forgotPasswordSchema } from "@/lib/auth-schema";
+import { requestPasswordReset } from "@/lib/actions/auth";
 
 export async function POST(request: Request) {
   try {
@@ -17,14 +18,10 @@ export async function POST(request: Request) {
       );
     }
 
-    const { email } = result.data;
-
-    return NextResponse.json({
-      success: true,
-      message: `Đã gửi liên kết khôi phục mật khẩu bảo mật đến email ${email}. Vui lòng kiểm tra hộp thư đến hoặc thư rác.`,
-      email,
-    });
+    const res = await requestPasswordReset(result.data.email);
+    return NextResponse.json(res, { status: 200 });
   } catch (error) {
+    console.error("Error in /api/auth/forgot-password:", error);
     return NextResponse.json(
       { success: false, message: "Lỗi hệ thống khi gửi link khôi phục." },
       { status: 500 }

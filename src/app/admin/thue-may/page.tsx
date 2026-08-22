@@ -29,6 +29,7 @@ import { SkeletonDataTable } from "@/components/ui/skeleton";
 import { TableEmptyState } from "@/components/admin/TableStates";
 import { CreateRentalDrawer } from "@/components/admin/AdminDrawers";
 import { CountUp } from "@/components/admin/DynamicStatCards";
+import { StatusBadge } from "@/components/ui/status-badge";
 import {
   getRentals,
   getRentalStats,
@@ -474,23 +475,11 @@ export default function RentalManagementPage() {
                       </td>
 
                       {/* Trạng thái */}
-                      <td className="py-3 px-3">
-                        <span
-                          className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            c.status === "active" && !c.isOverdue
-                              ? "bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800"
-                              : c.isOverdue
-                              ? "bg-rose-50 dark:bg-rose-950 text-rose-700 dark:text-rose-400 border border-rose-300 dark:border-rose-800 font-bold"
-                              : c.status === "expiring_soon" || c.isUrgentExpiring
-                              ? "bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800 font-semibold"
-                              : c.status === "completed"
-                              ? "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700"
-                              : "bg-sky-50 dark:bg-sky-950 text-sky-700 dark:text-sky-400 border border-sky-200"
-                          }`}
-                        >
-                          <span className="w-1.5 h-1.5 rounded-full bg-current" />
-                          {c.statusLabel}
-                        </span>
+                      <td className="py-3 px-3 whitespace-nowrap min-w-fit">
+                        <StatusBadge
+                          status={c.isOverdue ? "overdue" : c.isUrgentExpiring ? "expiring_soon" : c.status}
+                          label={c.isOverdue ? "Quá hạn" : c.statusLabel}
+                        />
                       </td>
 
                       {/* Thao tác */}

@@ -10,6 +10,7 @@ import {
   Boxes,
   Users,
   Settings,
+  ShieldCheck,
   Sun,
   Moon,
   ChevronLeft,
@@ -20,14 +21,17 @@ import {
   X,
 } from "lucide-react";
 import { useAdmin } from "./AdminThemeContext";
+import { getCurrentAccount, getAccounts } from "@/lib/actions/accounts";
+import { AccountRole } from "@/types/db";
 
 interface NavItem {
   name: string;
   href: string;
   aliases?: string[];
   icon: React.ComponentType<{ className?: string; size?: number; strokeWidth?: number }>;
-  badgeKey?: "rentals" | "repairs" | "inventory";
+  badgeKey?: "rentals" | "repairs" | "inventory" | "pendingAccounts";
   badgeType?: "info" | "warning" | "success";
+  requireRole?: AccountRole | "super_admin";
 }
 
 const navItems: NavItem[] = [
@@ -67,8 +71,18 @@ const navItems: NavItem[] = [
     icon: Users,
   },
   {
+    name: "Quản lý Tài khoản",
+    href: "/admin/accounts",
+    aliases: ["/admin/tai-khoan"],
+    icon: ShieldCheck,
+    requireRole: "super_admin",
+    badgeKey: "pendingAccounts",
+    badgeType: "warning",
+  },
+  {
     name: "Cài đặt",
     href: "/admin/cai-dat",
+    aliases: ["/admin/settings"],
     icon: Settings,
   },
 ];
@@ -84,10 +98,13 @@ export default function AdminSidebar() {
     setMobileSidebarOpen,
   } = useAdmin();
 
+  const [currentUserRole, setCurrentUserRole] = useState<AccountRole | "super_admin">("super_admin");
+
   const [dynamicCounts, setDynamicCounts] = useState<{
     inventory: number;
     rentals: number;
     repairs: number;
+    pendingAccounts: number;
     rentedDevices: number;
     totalDevices: number;
     utilizationRate: number;
@@ -95,14 +112,16 @@ export default function AdminSidebar() {
     inventory: 48,
     rentals: 12,
     repairs: 3,
+    pendingAccounts: 0,
     rentedDevices: 28,
     totalDevices: 48,
     utilizationRate: 58.3,
   });
 
   useEffect(() => {
-    const fetchStats = async () => {
+    const fetchSidebarData = async () => {
       try {
+        // 1. Fetch devices stats
         const res = await fetch("/api/admin/devices/stats", {
           cache: "no-store",
           headers: { "Cache-Control": "no-cache" },
@@ -110,21 +129,38 @@ export default function AdminSidebar() {
         const json = await res.json();
         if (json.status === "success" && json.data) {
           const d = json.data;
-          setDynamicCounts({
+          setDynamicCounts((prev) => ({
+            ...prev,
             inventory: d.totalDevices,
             rentals: d.commercial?.activeRentalsCount || d.rentedDevices,
             repairs: d.maintenanceDevices,
             rentedDevices: d.rentedDevices,
             totalDevices: d.totalDevices,
             utilizationRate: d.percentages?.rented || 0,
-          });
+          }));
+        }
+
+        // 2. Fetch user session & pending accounts count
+        const [user, accRes] = await Promise.all([
+          getCurrentAccount(),
+          getAccounts({ status: "pending", limit: 1 }),
+        ]);
+
+        if (user?.role) {
+          setCurrentUserRole(user.role);
+        }
+        if (accRes?.counts) {
+          setDynamicCounts((prev) => ({
+            ...prev,
+            pendingAccounts: accRes.counts.pending,
+          }));
         }
       } catch (err) {
-        console.error("Failed to load sidebar stats:", err);
+        console.error("Failed to load sidebar data:", err);
       }
     };
 
-    fetchStats();
+    fetchSidebarData();
   }, [pathname]);
 
   const isNavActive = (item: NavItem) => {
@@ -140,10 +176,16 @@ export default function AdminSidebar() {
     return false;
   };
 
-  const getBadgeValue = (key?: "rentals" | "repairs" | "inventory") => {
+  const getBadgeValue = (key?: "rentals" | "repairs" | "inventory" | "pendingAccounts") => {
     if (!key) return undefined;
-    return String(dynamicCounts[key]);
+    const val = dynamicCounts[key];
+    if (key === "pendingAccounts" && val === 0) return undefined;
+    return String(val);
   };
+
+  const visibleNavItems = navItems.filter(
+    (item) => !item.requireRole || currentUserRole === item.requireRole || currentUserRole === "super_admin"
+  );
 
   const sidebarContent = (
     <div className="flex flex-col h-full bg-white dark:bg-[#0b0f17] border-r border-slate-200 dark:border-slate-800 transition-all duration-200 select-none">
@@ -214,7 +256,7 @@ export default function AdminSidebar() {
           </div>
         )}
 
-        {navItems.map((item) => {
+        {visibleNavItems.map((item) => {
           const active = isNavActive(item);
           const Icon = item.icon;
           const badgeValue = getBadgeValue(item.badgeKey);
@@ -250,7 +292,7 @@ export default function AdminSidebar() {
                     active
                       ? "bg-white/20 dark:bg-cyan-900/60 text-white dark:text-cyan-300"
                       : item.badgeType === "warning"
-                      ? "bg-amber-100 dark:bg-amber-950/70 text-amber-700 dark:text-amber-400 border border-transparent dark:border-amber-800/40"
+                      ? "bg-amber-100 dark:bg-amber-950/70 text-amber-700 dark:text-amber-400 border border-transparent dark:border-amber-800/40 animate-pulse"
                       : item.badgeType === "success"
                       ? "bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-400 border border-transparent dark:border-emerald-800/40"
                       : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
@@ -277,88 +319,80 @@ export default function AdminSidebar() {
             href="/"
             target="_blank"
             title={isSidebarCollapsed ? "Trang chủ Khách hàng" : undefined}
-            className={`flex items-center gap-3 px-3 py-2 rounded-md text-xs text-slate-500 dark:text-slate-400 hover:text-[#0284c7] dark:hover:text-cyan-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors ${
+            className={`flex items-center gap-3 px-3 py-2 rounded-md text-xs text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-white transition-colors ${
               isSidebarCollapsed ? "justify-center px-2" : ""
             }`}
           >
-            <ExternalLink size={15} className="shrink-0" />
-            {!isSidebarCollapsed && <span className="truncate">Xem Portal B2B Public</span>}
+            <ExternalLink size={16} className="shrink-0" />
+            {!isSidebarCollapsed && <span>Cổng thông tin B2B</span>}
           </Link>
         </div>
       </div>
 
-      {/* 4. Footer Controls: Dark/Light Mode & Collapse Button */}
-      <div className="p-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 space-y-2 shrink-0">
-        {/* Dark / Light Toggle */}
-        <div
-          className={`flex items-center ${
-            isSidebarCollapsed ? "justify-center" : "justify-between"
-          } bg-slate-200/70 dark:bg-slate-800/80 p-1 rounded-md`}
-        >
-          {!isSidebarCollapsed && (
-            <span className="text-xs font-medium text-slate-600 dark:text-slate-400 pl-2">
-              Giao diện {theme === "dark" ? "Tối" : "Sáng"}
-            </span>
-          )}
-
-          <button
-            onClick={toggleTheme}
-            className={`flex items-center justify-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium transition-all ${
-              theme === "dark"
-                ? "bg-[#0b0f17] text-cyan-400 shadow-sm border border-slate-700"
-                : "bg-white text-amber-500 shadow-sm"
-            } ${isSidebarCollapsed ? "w-8 h-8 p-0" : ""}`}
-            aria-label="Chuyển đổi Dark/Light mode"
-            title={`Chuyển sang chế độ ${theme === "dark" ? "Sáng" : "Tối"}`}
-          >
-            {theme === "dark" ? <Moon size={14} /> : <Sun size={14} />}
-            {!isSidebarCollapsed && (
-              <span className="text-xs text-slate-800 dark:text-slate-200">
-                {theme === "dark" ? "Dark" : "Light"}
-              </span>
-            )}
-          </button>
-        </div>
-
-        {/* Desktop Collapse Toggle */}
+      {/* 4. Footer: Theme toggle & Collapse toggle */}
+      <div className="p-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2 shrink-0 bg-slate-50/50 dark:bg-[#070a0f]">
+        {/* Theme quick switch */}
         <button
-          onClick={toggleSidebar}
-          className="hidden lg:flex items-center justify-center gap-2 w-full py-1.5 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors"
-          aria-label={isSidebarCollapsed ? "Mở rộng sidebar" : "Thu gọn sidebar"}
-          title={isSidebarCollapsed ? "Mở rộng sidebar" : "Thu gọn sidebar"}
+          onClick={toggleTheme}
+          title={theme === "dark" ? "Chuyển sang chế độ Sáng" : "Chuyển sang chế độ Tối"}
+          className={`p-2 rounded-md text-slate-500 dark:text-slate-400 hover:bg-slate-200/70 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors ${
+            isSidebarCollapsed ? "w-full flex justify-center" : ""
+          }`}
+          aria-label="Đổi giao diện Sáng/Tối"
         >
-          {isSidebarCollapsed ? (
-            <ChevronRight size={16} />
-          ) : (
-            <>
-              <ChevronLeft size={16} />
-              <span className="text-xs">Thu gọn thanh bên</span>
-            </>
-          )}
+          {theme === "dark" ? <Sun size={17} /> : <Moon size={17} />}
         </button>
+
+        {/* Collapse toggle (Desktop only) */}
+        {!isSidebarCollapsed && (
+          <button
+            onClick={toggleSidebar}
+            title="Thu gọn menu thanh bên"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-slate-500 dark:text-slate-400 hover:bg-slate-200/70 dark:hover:bg-slate-800 rounded-md transition-colors"
+          >
+            <ChevronLeft size={15} />
+            <span>Thu gọn</span>
+          </button>
+        )}
       </div>
     </div>
   );
 
   return (
     <>
-      {/* Desktop Sidebar */}
+      {/* Desktop Fixed Sidebar */}
       <aside
-        className={`hidden lg:block fixed top-0 left-0 bottom-0 z-30 transition-all duration-200 ${
+        className={`fixed top-0 left-0 z-30 h-screen hidden lg:block transition-all duration-200 ${
           isSidebarCollapsed ? "w-16" : "w-64"
         }`}
       >
         {sidebarContent}
       </aside>
 
-      {/* Mobile Drawer Backdrop & Sidebar */}
+      {/* Desktop Floating Expand Button when collapsed */}
+      {isSidebarCollapsed && (
+        <button
+          onClick={toggleSidebar}
+          title="Mở rộng menu thanh bên"
+          className="hidden lg:flex fixed bottom-4 left-4 z-40 p-2 bg-[#0284c7] text-white rounded-full shadow-lg hover:bg-[#0369a1] transition-transform hover:scale-110"
+          aria-label="Mở rộng thanh bên"
+        >
+          <ChevronRight size={16} />
+        </button>
+      )}
+
+      {/* Mobile Backdrop & Drawer */}
       {isMobileSidebarOpen && (
-        <div className="lg:hidden fixed inset-0 z-50 flex">
+        <div className="fixed inset-0 z-50 lg:hidden">
+          {/* Backdrop */}
           <div
-            className="fixed inset-0 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm transition-opacity"
+            className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity"
             onClick={() => setMobileSidebarOpen(false)}
+            aria-hidden="true"
           />
-          <div className="relative w-72 max-w-[85vw] h-full shadow-2xl z-50 animate-in slide-in-from-left duration-200">
+
+          {/* Mobile Drawer */}
+          <div className="fixed inset-y-0 left-0 w-72 max-w-[85vw] shadow-2xl z-50">
             {sidebarContent}
           </div>
         </div>

@@ -10,6 +10,7 @@ import {
   Boxes,
   Users,
   Settings,
+  ShieldCheck,
   PlusCircle,
   FileText,
   Activity,
@@ -80,6 +81,15 @@ export default function CommandPalette() {
       subtitle: "Bệnh viện, phòng khám, trung tâm y tế & doanh nghiệp đối tác",
       href: "/admin/khach-hang",
       icon: Users,
+    },
+    {
+      id: "nav-accounts",
+      category: "Điều hướng",
+      title: "Quản lý Tài khoản & Phân quyền",
+      subtitle: "Phân quyền vai trò Super Admin, Sales, Technician, xét duyệt & mở khóa",
+      href: "/admin/accounts",
+      icon: ShieldCheck,
+      badge: "Super Admin",
     },
     {
       id: "nav-settings",

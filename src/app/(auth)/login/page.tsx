@@ -36,7 +36,6 @@ function LoginFormContent() {
   const {
     register,
     handleSubmit,
-    setValue,
     formState: { errors, isSubmitting },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -70,16 +69,10 @@ function LoginFormContent() {
       setIsSuccess(true);
       setTimeout(() => {
         router.push(result.redirectUrl || "/admin");
-      }, 500);
+      }, 400);
     } catch (err) {
       setServerError("Không thể kết nối đến máy chủ xác thực. Vui lòng kiểm tra mạng.");
     }
-  };
-
-  const fillDemoAccount = (email: string, pass: string) => {
-    setValue("email", email, { shouldValidate: true });
-    setValue("password", pass, { shouldValidate: true });
-    setServerError(null);
   };
 
   return (
@@ -118,21 +111,18 @@ function LoginFormContent() {
         )}
       </AnimatePresence>
 
-      {/* Server Error Alert Banner with Shake Animation */}
+      {/* Server Error Alert */}
       <AnimatePresence>
         {serverError && (
           <motion.div
             variants={errorShakeVariants}
-            initial="idle"
-            animate="shake"
+            initial="hidden"
+            animate="visible"
             exit={{ opacity: 0, height: 0 }}
-            className="mb-5 p-3.5 bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 rounded-lg text-xs text-rose-800 dark:text-rose-300 flex items-start gap-2.5"
+            className="mb-5 p-3 bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800/80 rounded-md text-xs text-rose-700 dark:text-rose-300 flex items-center gap-2"
           >
-            <AlertCircle size={16} className="text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
-            <div className="flex-1">
-              <span className="font-semibold block mb-0.5">Xác thực không thành công</span>
-              <span>{serverError}</span>
-            </div>
+            <AlertCircle size={16} className="shrink-0 text-rose-600 dark:text-rose-400" />
+            <span>{serverError}</span>
           </motion.div>
         )}
       </AnimatePresence>
@@ -143,15 +133,15 @@ function LoginFormContent() {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="mb-5 p-3.5 bg-sky-50 dark:bg-sky-950/60 border border-sky-200 dark:border-sky-800 rounded-lg text-xs text-[#0284c7] dark:text-sky-300 flex items-center gap-2"
+            className="mb-5 p-3 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 rounded-md text-xs text-emerald-700 dark:text-emerald-300 flex items-center gap-2"
           >
-            <CheckCircle2 size={16} className="shrink-0 text-[#0284c7] dark:text-sky-400" />
-            <span className="font-semibold">Đăng nhập thành công! Đang chuyển hướng vào bảng điều khiển...</span>
+            <CheckCircle2 size={16} className="shrink-0 text-emerald-600 dark:text-emerald-400" />
+            <span>Xác thực thành công. Đang chuyển hướng vào hệ thống...</span>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Login Form with Staggered Inputs */}
+      {/* Form */}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
         {/* Email Field */}
         <motion.div variants={formItemVariants} className="space-y-1">
@@ -159,7 +149,7 @@ function LoginFormContent() {
             htmlFor="login-email"
             className="block text-xs font-semibold text-slate-700 dark:text-slate-300"
           >
-            Email công vụ / Tài khoản y tế <span className="text-[#0284c7]">*</span>
+            Địa chỉ Email công vụ <span className="text-[#0284c7]">*</span>
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
@@ -170,7 +160,7 @@ function LoginFormContent() {
               type="email"
               autoComplete="email"
               autoFocus
-              placeholder="ten.bacsi@benhvien.vn"
+              placeholder="bacsi@phongkham.vn"
               {...register("email")}
               className={`w-full pl-9 pr-3 py-2.5 text-xs bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 border rounded-md outline-none transition-colors ${
                 errors.email
@@ -287,45 +277,6 @@ function LoginFormContent() {
           </motion.button>
         </motion.div>
       </form>
-
-      {/* Demo Quick Accounts Pill List */}
-      <motion.div variants={formItemVariants} className="mt-6 pt-5 border-t border-slate-100 dark:border-slate-800 space-y-2">
-        <p className="text-xs font-mono-data uppercase tracking-wider text-slate-400 dark:text-slate-500 font-semibold">
-          Tài khoản Demo thử nghiệm nhanh:
-        </p>
-        <div className="flex flex-wrap gap-1.5">
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.96 }}
-            type="button"
-            onClick={() => fillDemoAccount("admin@osteosys.vn", "Admin@123")}
-            className="px-2 py-1 bg-sky-50 dark:bg-sky-950 text-sky-800 dark:text-sky-300 border border-sky-200 dark:border-sky-800 hover:bg-sky-100 text-xs font-mono-data rounded transition-colors"
-            title="Đăng nhập tài khoản Quản trị viên Kỹ thuật"
-          >
-            👨‍⚕️ Admin (admin@osteosys.vn)
-          </motion.button>
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.96 }}
-            type="button"
-            onClick={() => fillDemoAccount("pending@clinic.vn", "Doctor@123")}
-            className="px-2 py-1 bg-amber-50 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 hover:bg-amber-100 text-xs font-mono-data rounded transition-colors"
-            title="Thử nghiệm tài khoản Chờ duyệt"
-          >
-            ⏳ Chờ kích hoạt
-          </motion.button>
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.96 }}
-            type="button"
-            onClick={() => fillDemoAccount("suspended@clinic.vn", "Doctor@123")}
-            className="px-2 py-1 bg-rose-50 dark:bg-rose-950 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-800 hover:bg-rose-100 text-xs font-mono-data rounded transition-colors"
-            title="Thử nghiệm tài khoản Tạm ngưng/Hết hạn"
-          >
-            ⚠️ Tạm ngưng dịch vụ
-          </motion.button>
-        </div>
-      </motion.div>
 
       {/* Register Redirect Link */}
       <motion.div variants={formItemVariants} className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 text-center">

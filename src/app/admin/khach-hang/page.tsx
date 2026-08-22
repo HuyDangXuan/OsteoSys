@@ -32,6 +32,7 @@ import {
 import { toast } from "sonner";
 import { SkeletonDataTable } from "@/components/ui/skeleton";
 import { TableEmptyState } from "@/components/admin/TableStates";
+import { StatusBadge } from "@/components/ui/status-badge";
 import {
   getPartners,
   createPartner,
@@ -491,16 +492,8 @@ export default function CustomersPage() {
                     </td>
 
                     {/* Status Badge */}
-                    <td className="py-3 px-4">
-                      <span
-                        className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${
-                          p.status === "active"
-                            ? "bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/40"
-                            : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700"
-                        }`}
-                      >
-                        {p.statusLabel}
-                      </span>
+                    <td className="py-3 px-4 whitespace-nowrap min-w-fit">
+                      <StatusBadge status={p.status} label={p.statusLabel} />
                     </td>
 
                     {/* Actions */}
