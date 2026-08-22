@@ -156,27 +156,37 @@ export async function getRentals(options: RentalQueryOptions = {}): Promise<Join
       const isUrgentExpiring = (c.status === "active" || c.status === "expiring_soon") && remainingDays >= 0 && remainingDays <= 3;
       const isExpiringSoon = (c.status === "active" || c.status === "expiring_soon") && remainingDays >= 0 && remainingDays <= 7;
 
-      let packageLabel = "Thuê tháng tiêu chuẩn";
-      if (c.packageType === "long_term") packageLabel = "Thuê dài hạn (>12 tháng)";
-      if (c.packageType === "daily_event") packageLabel = "Khám lưu động sự kiện";
+      let packageLabel = "Thuê tháng";
+      if (c.packageType === "long_term") packageLabel = "Thuê dài hạn (>6 tháng)";
+      if (c.packageType === "daily" || c.packageType === "daily_event") packageLabel = "Thuê theo ngày / Khám lưu động";
 
       let statusLabel = "Đang vận hành";
       if (c.status === "draft") statusLabel = "Chờ bàn giao";
       else if (isOverdue) statusLabel = "Quá hạn thuê";
       else if (isUrgentExpiring || c.status === "expiring_soon") statusLabel = "Sắp hết hạn";
       else if (c.status === "completed") statusLabel = "Đã hoàn tất";
-      else if (c.status === "terminated") statusLabel = "Đã thanh lý";
+      else if (c.status === "terminated" || c.status === "cancelled") statusLabel = "Đã thanh lý";
+
+      const effectiveFee = c.rentalFee ?? c.monthlyRentalFee ?? 0;
+
+      const pType = c.partnerType || partner?.type;
+      let pTypeLabel = "Phòng khám Đa khoa";
+      if (pType === "general_hospital" || pType === "hospital") pTypeLabel = "Bệnh viện Đa khoa";
+      else if (pType === "specialist_hospital") pTypeLabel = "Bệnh viện Chuyên khoa";
+      else if (pType === "specialist_clinic" || pType === "clinic") pTypeLabel = "Phòng khám Chuyên khoa";
+      else if (pType === "mobile_screening" || pType === "enterprise") pTypeLabel = "Khám lưu động / Sự kiện";
+      else if (pType === "doctor_private" || pType === "doctor") pTypeLabel = "Bác sĩ / Phòng mạch";
 
       return {
         id: c._id?.toString() || c.contractCode,
         contractCode: c.contractCode,
         partnerId: c.partnerId?.toString() || "",
         partnerName: c.partnerName,
-        partnerPhone: partner?.primaryContact?.phone || partner?.phone || "0904 888 234",
-        partnerEmail: partner?.primaryContact?.email || partner?.email || "",
-        partnerAddress: partner?.address ? `${partner.address}, ${partner.city || ""}` : "Hà Nội",
-        partnerType: partner?.type === "hospital" ? "Bệnh viện" : partner?.type === "clinic" ? "Phòng khám" : "Doanh nghiệp",
-        contactPerson: partner?.primaryContact?.name || "BS. Phụ trách Khoa",
+        partnerPhone: c.contactPerson?.phone || partner?.primaryContact?.phone || partner?.phone || "0904000000",
+        partnerEmail: c.contactPerson?.email || partner?.primaryContact?.email || partner?.email || "",
+        partnerAddress: c.deliveryAddress || (partner?.address ? `${partner.address}, ${partner.city || ""}` : "Cơ sở Khách hàng"),
+        partnerType: pTypeLabel,
+        contactPerson: c.contactPerson?.name || partner?.primaryContact?.name || "Người phụ trách",
         deviceId: c.deviceId?.toString() || "",
         deviceSerial: c.deviceSerial,
         deviceModel: device?.model || "Sonost 3000 PRO",
@@ -190,11 +200,11 @@ export async function getRentals(options: RentalQueryOptions = {}): Promise<Join
         startDate: start.toLocaleDateString("vi-VN"),
         endDate: end.toLocaleDateString("vi-VN"),
         returnDate: c.returnDate ? new Date(c.returnDate).toLocaleDateString("vi-VN") : null,
-        monthlyRentalFee: c.monthlyRentalFee || 0,
-        formattedMonthlyFee: new Intl.NumberFormat("vi-VN").format(c.monthlyRentalFee || 0) + " ₫",
+        monthlyRentalFee: effectiveFee,
+        formattedMonthlyFee: new Intl.NumberFormat("vi-VN").format(effectiveFee) + " ₫",
         depositAmount: c.depositAmount || 0,
         formattedDeposit: new Intl.NumberFormat("vi-VN").format(c.depositAmount || 0) + " ₫",
-        paymentTerms: c.paymentTerms || "Thanh toán theo tháng",
+        paymentTerms: c.paymentTerms || "Thanh toán theo thỏa thuận",
         status: isOverdue ? "expiring_soon" : c.status,
         statusLabel,
         remainingDays,
@@ -347,22 +357,15 @@ export async function getRentalStats(): Promise<RentalStatsResult> {
   }
 }
 
+import { getSessionUser } from "@/lib/jwt";
+import { CreateRentalContractInput, createRentalContractSchema } from "@/lib/schemas/rental-schema";
+
 /**
- * 3. createRentalContract: Create new contract HDT-XXXX and atomically synchronize device
+ * 3. createRentalContract: Create new contract HD-YYYY-XXX, auto-extract B2B Partner, and atomically synchronize device
  */
-export async function createRentalContract(formData: {
-  partnerName: string;
-  partnerId?: string;
-  deviceSerial: string;
-  startDate: string;
-  durationMonths: string | number;
-  monthlyFee: string | number;
-  deposit?: string | number;
-  packageType?: "monthly" | "long_term" | "daily_event";
-  paymentTerms?: string;
-  notes?: string;
-}) {
+export async function createRentalContract(rawInput: any) {
   try {
+    const session = await getSessionUser();
     const contractsCol = await getCollection<RentalContract>(COLLECTIONS.RENTAL_CONTRACTS);
     const devicesCol = await getCollection<Device>(COLLECTIONS.DEVICES);
     const partnersCol = await getCollection<Partner>(COLLECTIONS.PARTNERS);
@@ -370,23 +373,36 @@ export async function createRentalContract(formData: {
     const {
       partnerName,
       partnerId,
+      partnerType = "general_clinic",
+      representativeName = "Người phụ trách",
+      phone = "0904000000",
+      deliveryAddress,
+      taxCode,
       deviceSerial,
-      startDate,
-      durationMonths = 6,
-      monthlyFee = 15000000,
-      deposit = 30000000,
       packageType = "monthly",
-      paymentTerms = "Thanh toán định kỳ hàng tháng",
+      startDate,
+      endDate: customEndDate,
+      durationMonths = 6,
+      rentalFee,
+      monthlyFee,
+      depositAmount,
+      deposit,
+      paymentTerms = "Thanh toán theo thỏa thuận",
       notes,
-    } = formData;
+    } = rawInput;
 
     const device = await devicesCol.findOne({ serialNumber: deviceSerial });
     if (!device) {
       return { success: false, message: `Không tìm thấy thiết bị mang số serial ${deviceSerial}` };
     }
 
+    const effectiveRentalFee = Number(rentalFee ?? monthlyFee ?? 15000000);
+    const effectiveDeposit = Number(depositAmount ?? deposit ?? 30000000);
+    const effectiveAddress = (deliveryAddress || device.location || "Cơ sở Y tế Khách hàng").trim();
+
+    // Auto-extract or resolve Partner
     let resolvedPartnerId: ObjectId = new ObjectId();
-    let finalPartnerName = partnerName;
+    let finalPartnerName = partnerName.trim();
 
     if (partnerId && ObjectId.isValid(partnerId)) {
       resolvedPartnerId = new ObjectId(partnerId);
@@ -395,11 +411,26 @@ export async function createRentalContract(formData: {
         finalPartnerName = found.name;
         await partnersCol.updateOne(
           { _id: resolvedPartnerId },
-          { $inc: { activeContractsCount: 1, devicesCount: 1 }, $set: { updatedAt: new Date() } }
+          {
+            $inc: { activeContractsCount: 1, devicesCount: 1 },
+            $set: {
+              ...(deliveryAddress ? { address: effectiveAddress } : {}),
+              ...(taxCode ? { taxCode: taxCode.trim() } : {}),
+              updatedAt: new Date(),
+            },
+          }
         );
       }
     } else {
-      const syncResult = await findOrCreatePartner({ name: partnerName });
+      const syncResult = await findOrCreatePartner({
+        name: finalPartnerName,
+        phone: phone.trim(),
+        address: effectiveAddress,
+        taxCode: taxCode?.trim(),
+        type: partnerType,
+        contactPerson: representativeName.trim(),
+        position: "Phụ trách Trang thiết bị Y tế",
+      });
       resolvedPartnerId = syncResult.partnerId;
       finalPartnerName = syncResult.partnerName;
       await partnersCol.updateOne(
@@ -408,12 +439,21 @@ export async function createRentalContract(formData: {
       );
     }
 
+    const currentYear = new Date().getFullYear();
     const count = await contractsCol.countDocuments();
-    const contractCode = `HDT-${String(count + 100).padStart(4, "0")}`;
+    const contractCode = `HD-${currentYear}-${String(count + 1).padStart(3, "0")}`;
 
     const start = startDate ? new Date(startDate) : new Date();
-    const end = new Date(start);
-    end.setMonth(end.getMonth() + Number(durationMonths));
+    let end: Date;
+
+    if (packageType === "daily" || packageType === "daily_event") {
+      end = customEndDate ? new Date(customEndDate) : new Date(start);
+    } else {
+      end = customEndDate ? new Date(customEndDate) : new Date(start);
+      if (!customEndDate) {
+        end.setMonth(end.getMonth() + Number(durationMonths || 6));
+      }
+    }
 
     const contractId = new ObjectId();
     const newContract: RentalContract = {
@@ -421,17 +461,24 @@ export async function createRentalContract(formData: {
       contractCode,
       partnerId: resolvedPartnerId,
       partnerName: finalPartnerName,
+      partnerType,
+      contactPerson: {
+        name: representativeName.trim(),
+        phone: phone.trim(),
+      },
+      deliveryAddress: effectiveAddress,
       deviceId: device._id || new ObjectId(),
       deviceSerial,
       packageType,
       startDate: start,
       endDate: end,
-      monthlyRentalFee: Number(monthlyFee),
-      depositAmount: Number(deposit),
+      rentalFee: effectiveRentalFee,
+      monthlyRentalFee: effectiveRentalFee,
+      depositAmount: effectiveDeposit,
       paymentTerms,
       handoverDate: start,
       status: "active",
-      notes: notes || undefined,
+      notes: notes?.trim() || undefined,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -444,7 +491,7 @@ export async function createRentalContract(formData: {
       {
         $set: {
           currentStatus: "rented",
-          location: finalPartnerName,
+          location: `${finalPartnerName} (${effectiveAddress})`,
           currentPartnerId: resolvedPartnerId,
           currentContractId: contractId,
           updatedAt: new Date(),
@@ -452,14 +499,28 @@ export async function createRentalContract(formData: {
       }
     );
 
-    // Audit log
+    // Dynamic Audit Log
     await recordAuditLog({
-      actor: { email: "admin@osteosys.vn", fullName: "BS. Nguyễn Trọng Hải", role: "super_admin" },
-      action: "create",
+      actor: {
+        accountId: session?.accountId,
+        email: session?.email || "admin@osteosys.vn",
+        fullName: session?.fullName || "Super Admin",
+        role: session?.role || "super_admin",
+      },
+      action: "rental.create",
       resource: "rental_contract",
       resourceId: contractCode,
-      resourceLabel: `Khởi tạo hợp đồng ${contractCode} cho ${finalPartnerName}`,
-      after: { contractCode, partnerName: finalPartnerName, deviceSerial, monthlyFee },
+      resourceLabel: `Khởi tạo hợp đồng thuê ${contractCode} cho ${finalPartnerName} (${packageType})`,
+      after: {
+        contractCode,
+        partnerName: finalPartnerName,
+        partnerType,
+        deviceSerial,
+        rentalFee: effectiveRentalFee,
+        depositAmount: effectiveDeposit,
+        startDate: start.toISOString(),
+        endDate: end.toISOString(),
+      },
       status: "success",
     });
 
@@ -473,14 +534,15 @@ export async function createRentalContract(formData: {
 
     return {
       success: true,
-      message: `Tạo hợp đồng ${contractCode} thành công! Thiết bị ${deviceSerial} đã được gán sang cơ sở ${partnerName}.`,
+      message: `Tạo hợp đồng ${contractCode} thành công! Thiết bị ${deviceSerial} đã được phân bổ cho ${finalPartnerName}.`,
       contractCode,
+      contractId: contractId.toString(),
     };
   } catch (error) {
     console.error("Error in createRentalContract:", error);
     return {
       success: false,
-      message: error instanceof Error ? error.message : "Lỗi không xác định khi tạo hợp đồng",
+      message: error instanceof Error ? error.message : "Lỗi khi tạo hợp đồng thuê thiết bị.",
     };
   }
 }

@@ -61,7 +61,7 @@ export default function CustomersPage() {
   // Form State
   const [formData, setFormData] = useState({
     name: "",
-    type: "clinic" as "hospital" | "clinic" | "enterprise" | "doctor" | "individual",
+    type: "general_clinic" as any,
     taxCode: "",
     address: "",
     city: "Hà Nội",
@@ -372,10 +372,12 @@ export default function CustomersPage() {
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 pt-1 border-t border-slate-100 dark:border-slate-800/80 text-xs">
           {[
             { id: "all", label: "Tất cả đối tác" },
-            { id: "hospital", label: "🏥 Bệnh viện Đa khoa" },
-            { id: "clinic", label: "🩺 Phòng khám Chuyên khoa" },
-            { id: "enterprise", label: "🏢 Doanh nghiệp / Khám đoàn" },
-            { id: "doctor", label: "👨‍⚕️ Bác sĩ / Chuyên gia" },
+            { id: "general_hospital", label: "🏥 Bệnh viện Đa khoa" },
+            { id: "specialist_hospital", label: "🏥 Bệnh viện Chuyên khoa" },
+            { id: "general_clinic", label: "🩺 Phòng khám Đa khoa" },
+            { id: "specialist_clinic", label: "🩺 Phòng khám Chuyên khoa" },
+            { id: "mobile_screening", label: "🚐 Khám Lưu động / Sự kiện" },
+            { id: "doctor_private", label: "👨‍⚕️ Bác sĩ / Phòng mạch" },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -601,10 +603,12 @@ export default function CustomersPage() {
                       onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
                       className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-xs text-slate-900 dark:text-slate-100 outline-none font-medium"
                     >
-                      <option value="clinic">Phòng khám Chuyên khoa</option>
-                      <option value="hospital">Bệnh viện Đa khoa</option>
-                      <option value="enterprise">Doanh nghiệp / Khám đoàn</option>
-                      <option value="doctor">Bác sĩ / Chuyên gia</option>
+                      <option value="general_hospital">Bệnh viện Đa khoa</option>
+                      <option value="specialist_hospital">Bệnh viện Chuyên khoa</option>
+                      <option value="general_clinic">Phòng khám Đa khoa</option>
+                      <option value="specialist_clinic">Phòng khám Chuyên khoa</option>
+                      <option value="mobile_screening">Đoàn khám Sức khỏe Lưu động / Sự kiện</option>
+                      <option value="doctor_private">Bác sĩ / Phòng mạch Tư nhân</option>
                     </select>
                   </div>
 

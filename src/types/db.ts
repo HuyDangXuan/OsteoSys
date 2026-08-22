@@ -119,8 +119,20 @@ export interface Lead {
   updatedAt: Date;
 }
 
-// 4. Partner Model (Clinics, Hospitals, Doctors)
-export type PartnerType = "hospital" | "clinic" | "enterprise" | "doctor" | "individual";
+// 4. Partner Model (Clinics, Hospitals, Doctors, Enterprises)
+export type PartnerType =
+  | "general_hospital"
+  | "specialist_hospital"
+  | "general_clinic"
+  | "specialist_clinic"
+  | "mobile_screening"
+  | "doctor_private"
+  | "hospital"
+  | "clinic"
+  | "enterprise"
+  | "doctor"
+  | "individual";
+
 export type PartnerStatus = "active" | "inactive";
 
 export interface PartnerContact {
@@ -138,6 +150,8 @@ export interface Partner {
   taxCode?: string;
   address: string;
   city: string;
+  district?: string;
+  ward?: string;
   primaryContact: PartnerContact;
   activeContractsCount: number;
   devicesCount: number;
@@ -148,12 +162,14 @@ export interface Partner {
 }
 
 // 5. Rental Contract Model
-export type RentalPackageType = "daily_event" | "monthly" | "long_term";
+export type RentalPackageType = "daily" | "monthly" | "long_term" | "daily_event";
 export type RentalContractStatus =
   | "draft"
   | "active"
   | "expiring_soon"
+  | "overdue"
   | "completed"
+  | "cancelled"
   | "terminated";
 
 export interface RentalContract {
@@ -161,13 +177,21 @@ export interface RentalContract {
   contractCode: string; // Unique, e.g. "HD-2026-089"
   partnerId: ObjectId;
   partnerName: string;
+  partnerType?: string;
+  contactPerson?: {
+    name: string;
+    phone: string;
+    email?: string;
+  };
+  deliveryAddress?: string;
   deviceId: ObjectId;
   deviceSerial: string;
   packageType: RentalPackageType;
   startDate: Date;
   endDate: Date;
-  monthlyRentalFee: number;
-  depositAmount: number;
+  rentalFee?: number; // Đơn giá thuê (VNĐ)
+  monthlyRentalFee: number; // Backward compatibility alias
+  depositAmount: number; // Tiền cọc thiết bị
   paymentTerms: string;
   handoverDate?: Date | null;
   returnDate?: Date | null;
@@ -189,6 +213,7 @@ export type RepairTicketStatus =
   | "calibrating"
   | "qc_passed"
   | "delivered"
+  | "archived"
   | "cancelled";
 
 export interface ReplacedPart {

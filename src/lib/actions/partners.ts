@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getCollection } from "@/lib/mongodb";
-import { COLLECTIONS, Partner, RentalContract, RepairTicket } from "@/types/db";
+import { COLLECTIONS, Partner, RentalContract, RepairTicket, PartnerType } from "@/types/db";
 import { recordAuditLog } from "@/lib/audit";
 import {
   createPartnerSchema,
@@ -26,7 +26,7 @@ export interface PartnerListItem {
   id: string;
   code: string;
   name: string;
-  type: "hospital" | "clinic" | "enterprise" | "doctor" | "individual";
+  type: PartnerType;
   typeLabel: string;
   taxCode?: string;
   address: string;
@@ -89,6 +89,12 @@ export interface PartnerDetailResult {
 }
 
 const PARTNER_TYPE_LABELS: Record<string, string> = {
+  general_hospital: "Bệnh viện Đa khoa",
+  specialist_hospital: "Bệnh viện Chuyên khoa",
+  general_clinic: "Phòng khám Đa khoa",
+  specialist_clinic: "Phòng khám Chuyên khoa",
+  mobile_screening: "Đoàn khám Lưu động / Sự kiện",
+  doctor_private: "Bác sĩ / Phòng mạch Tư nhân",
   hospital: "Bệnh viện Đa khoa",
   clinic: "Phòng khám Chuyên khoa",
   enterprise: "Doanh nghiệp / Khám đoàn",

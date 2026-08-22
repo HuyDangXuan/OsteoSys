@@ -102,127 +102,68 @@ export async function POST(request: Request) {
     const {
       partnerName,
       partnerId,
+      partnerType,
+      representativeName,
+      phone,
+      deliveryAddress,
+      taxCode,
       deviceSerial,
       packageType,
       durationMonths,
+      rentalFee,
       monthlyFee,
+      depositAmount,
       deposit,
       startDate,
+      endDate,
       paymentTerms,
       notes,
     } = body;
 
     if (!partnerName || !deviceSerial) {
       return NextResponse.json(
-        { status: "error", message: "Vui lòng nhập tên khách hàng và chọn mã số máy" },
+        { status: "error", message: "Vui lòng nhập tên Cơ sở / Bệnh viện và chọn số serial máy" },
         { status: 400 }
       );
     }
 
-    const contractsCol = await getCollection<RentalContract>(COLLECTIONS.RENTAL_CONTRACTS);
-    const devicesCol = await getCollection<Device>(COLLECTIONS.DEVICES);
-    const partnersCol = await getCollection<Partner>(COLLECTIONS.PARTNERS);
-
-    // Verify Device exists in database
-    const existingDevice = await devicesCol.findOne({ serialNumber: deviceSerial });
-    if (!existingDevice) {
-      return NextResponse.json(
-        { status: "error", message: `Không tìm thấy thiết bị mang số serial ${deviceSerial}` },
-        { status: 404 }
-      );
-    }
-
-    // Resolve or find partner ID
-    let resolvedPartnerId: ObjectId = new ObjectId();
-    if (partnerId && ObjectId.isValid(partnerId)) {
-      resolvedPartnerId = new ObjectId(partnerId);
-    } else {
-      const foundPartner = await partnersCol.findOne({ name: partnerName });
-      if (foundPartner?._id) {
-        resolvedPartnerId = foundPartner._id;
-      }
-    }
-
-    const count = await contractsCol.countDocuments();
-    const contractCode = `HD-2026-${String(count + 100).padStart(3, "0")}`;
-
-    const start = startDate ? new Date(startDate) : new Date();
-    const end = new Date(start);
-    end.setMonth(end.getMonth() + Number(durationMonths || 6));
-
-    const contractId = new ObjectId();
-
-    const newContract: RentalContract = {
-      _id: contractId,
-      contractCode,
-      partnerId: resolvedPartnerId,
+    const { createRentalContract } = await import("@/lib/actions/rentals");
+    const result = await createRentalContract({
       partnerName,
-      deviceId: existingDevice._id || new ObjectId(),
+      partnerId,
+      partnerType,
+      representativeName,
+      phone,
+      deliveryAddress,
+      taxCode,
       deviceSerial,
-      packageType: packageType || "monthly",
-      startDate: start,
-      endDate: end,
-      monthlyRentalFee: Number(monthlyFee || 15000000),
-      depositAmount: Number(deposit || 30000000),
-      paymentTerms: paymentTerms || "Thanh toán theo tháng",
-      handoverDate: start,
-      status: "active",
-      notes: notes || undefined,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-
-    await contractsCol.insertOne(newContract);
-
-    // Atomically synchronize device currentStatus to "rented"
-    await devicesCol.updateOne(
-      { serialNumber: deviceSerial },
-      {
-        $set: {
-          currentStatus: "rented",
-          location: `${partnerName}`,
-          currentPartnerId: resolvedPartnerId,
-          currentContractId: contractId,
-          updatedAt: new Date(),
-        },
-      }
-    );
-
-    // Record Audit Log
-    await recordAuditLog({
-      actor: { email: "admin@osteosys.vn", fullName: "BS. Nguyễn Trọng Hải", role: "super_admin" },
-      action: "create",
-      resource: "rental_contract",
-      resourceId: contractCode,
-      resourceLabel: `Hợp đồng thuê máy ${contractCode} (${partnerName} - ${deviceSerial})`,
-      after: { contractCode, partnerName, deviceSerial, monthlyFee, status: "active" },
-      request,
-      status: "success",
+      packageType,
+      durationMonths,
+      rentalFee,
+      monthlyFee,
+      depositAmount,
+      deposit,
+      startDate,
+      endDate,
+      paymentTerms,
+      notes,
     });
 
-    // Revalidate relevant pages
-    try {
-      revalidatePath("/admin/thue-may");
-      revalidatePath("/admin/leasing");
-      revalidatePath("/admin/kho-thiet-bi");
-      revalidatePath("/admin/inventory");
-      revalidatePath("/admin");
-    } catch {
-      // Ignore during build/worker
+    if (!result.success) {
+      return NextResponse.json(
+        { status: "error", message: result.message },
+        { status: 400 }
+      );
     }
 
     return NextResponse.json({
       status: "success",
-      message: `Hợp đồng ${contractCode} đã được khởi tạo thành công và đồng bộ trạng thái máy sang Đang cho thuê`,
-      data: newContract,
+      message: result.message,
+      data: { contractCode: result.contractCode, contractId: result.contractId },
     });
-  } catch (error) {
+  } catch (error: any) {
     return NextResponse.json(
-      {
-        status: "error",
-        message: "Lỗi tạo hợp đồng thuê",
-        error: error instanceof Error ? error.message : String(error),
-      },
+      { status: "error", message: error.message || "Lỗi xử lý tạo hợp đồng" },
       { status: 500 }
     );
   }

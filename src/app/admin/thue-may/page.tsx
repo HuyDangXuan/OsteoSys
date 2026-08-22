@@ -354,7 +354,7 @@ export default function RentalManagementPage() {
                     <th className="py-3 px-3">Cơ Sở Y Tế / Khách Hàng</th>
                     <th className="py-3 px-3">Thiết Bị Gán</th>
                     <th className="py-3 px-3">Thời Hạn Thuê</th>
-                    <th className="py-3 px-3">Phí Thuê / Tháng</th>
+                    <th className="py-3 px-3">Đơn Giá Thuê</th>
                     <th className="py-3 px-3">Trạng Thái</th>
                     <th className="py-3 px-3 text-right">Thao Tác</th>
                   </tr>
@@ -925,7 +925,7 @@ export default function RentalManagementPage() {
                   </h4>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="p-2.5 bg-white dark:bg-slate-900 rounded border border-indigo-100 dark:border-indigo-900/50">
-                      <span className="text-slate-400 block text-[11px]">Đơn giá thuê hàng tháng</span>
+                      <span className="text-slate-400 block text-[11px]">Đơn giá thuê</span>
                       <span className="font-mono-data font-bold text-slate-900 dark:text-slate-100 text-sm">
                         {selectedDetailContract.formattedMonthlyFee}
                       </span>

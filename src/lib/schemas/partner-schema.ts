@@ -1,6 +1,18 @@
 import { z } from "zod";
 
-export const partnerTypeEnum = z.enum(["hospital", "clinic", "enterprise", "doctor", "individual"]);
+export const partnerTypeEnum = z.enum([
+  "general_hospital",
+  "specialist_hospital",
+  "general_clinic",
+  "specialist_clinic",
+  "mobile_screening",
+  "doctor_private",
+  "hospital",
+  "clinic",
+  "enterprise",
+  "doctor",
+  "individual",
+]);
 export const partnerStatusEnum = z.enum(["active", "inactive"]);
 
 /**

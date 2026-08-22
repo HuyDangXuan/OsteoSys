@@ -73,6 +73,7 @@ const STATUS_LABELS: Record<RepairTicketStatus, string> = {
   calibrating: "Đang hiệu chuẩn",
   qc_passed: "Đạt chuẩn ISCD",
   delivered: "Đã bàn giao",
+  archived: "Đã lưu trữ / Đóng hồ sơ",
   cancelled: "Đã hủy",
 };
 
@@ -84,6 +85,7 @@ const STATUS_STEP_MAP: Record<RepairTicketStatus, number> = {
   calibrating: 5,
   qc_passed: 5,
   delivered: 6,
+  archived: 6,
   cancelled: 0,
 };
 
@@ -224,7 +226,7 @@ export async function getRepairStats(): Promise<RepairStatsResult> {
           $facet: {
             total: [{ $count: "count" }],
             active: [
-              { $match: { status: { $nin: ["delivered", "cancelled"] } } },
+              { $match: { status: { $nin: ["delivered", "archived", "cancelled"] } } },
               { $count: "count" },
             ],
             received: [{ $match: { status: "received" } }, { $count: "count" }],
@@ -237,7 +239,7 @@ export async function getRepairStats(): Promise<RepairStatsResult> {
             ],
             delivered: [{ $match: { status: "delivered" } }, { $count: "count" }],
             urgent: [
-              { $match: { priority: "urgent", status: { $nin: ["delivered", "cancelled"] } } },
+              { $match: { priority: "urgent", status: { $nin: ["delivered", "archived", "cancelled"] } } },
               { $count: "count" },
             ],
             costs: [
@@ -530,6 +532,67 @@ export async function updateRepairTimeline(
     return {
       success: false,
       message: error instanceof Error ? error.message : "Lỗi khi cập nhật tiến độ sửa chữa",
+    };
+  }
+}
+
+/**
+ * 5. archiveRepairTicket: Archive completed repair ticket into historical storage
+ */
+export async function archiveRepairTicket(ticketCode: string, note?: string) {
+  try {
+    const ticketsCol = await getCollection<RepairTicket>(COLLECTIONS.REPAIR_TICKETS);
+    const ticket = await ticketsCol.findOne({ ticketCode });
+    if (!ticket) {
+      return { success: false, message: `Không tìm thấy phiếu sửa chữa ${ticketCode}` };
+    }
+
+    const now = new Date();
+    const timelineEntry = {
+      status: "archived" as RepairTicketStatus,
+      note: note || "Đóng hồ sơ sửa chữa và chuyển vào kho lưu trữ lịch sử kỹ thuật",
+      updatedBy: "Kỹ sư OsteoSys",
+      timestamp: now,
+    };
+
+    await ticketsCol.updateOne(
+      { ticketCode },
+      {
+        $set: {
+          status: "archived",
+          updatedAt: now,
+        },
+        $push: {
+          timeline: timelineEntry,
+        } as any,
+      }
+    );
+
+    await recordAuditLog({
+      actor: { email: "admin@osteosys.vn", fullName: "BS. Nguyễn Trọng Hải", role: "super_admin" },
+      action: "status_change",
+      resource: "repair_ticket",
+      resourceId: ticketCode,
+      resourceLabel: `Lưu trữ / Đóng hồ sơ sửa chữa ${ticketCode} (Thiết bị #${ticket.deviceSerial})`,
+      after: { status: "archived" },
+      status: "success",
+    });
+
+    revalidatePath("/admin/repairs");
+    revalidatePath("/admin/sua-chua");
+    revalidatePath("/admin/kho-thiet-bi");
+    revalidatePath("/admin/inventory");
+    revalidatePath("/admin");
+
+    return {
+      success: true,
+      message: `Đã đóng và lưu trữ thành công hồ sơ sửa chữa ${ticketCode}!`,
+    };
+  } catch (error) {
+    console.error("Error in archiveRepairTicket:", error);
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : "Lỗi khi lưu trữ hồ sơ sửa chữa",
     };
   }
 }

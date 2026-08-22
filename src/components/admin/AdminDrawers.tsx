@@ -19,12 +19,19 @@ import {
 export interface RentalFormData {
   partnerName: string;
   partnerId?: string;
+  partnerType: string;
+  representativeName: string;
+  phone: string;
+  deliveryAddress: string;
+  taxCode: string;
   deviceSerial: string;
+  packageType: "daily" | "monthly" | "long_term";
   startDate: string;
+  endDate: string;
   durationMonths: string;
-  monthlyFee: string;
+  rentalFee: string;
   deposit: string;
-  packageType: string;
+  paymentTerms: string;
   notes: string;
 }
 
@@ -39,8 +46,21 @@ export interface PartnerOption {
   id: string;
   name: string;
   type: string;
-  contactPerson: string;
+  typeLabel?: string;
+  contactPerson?: string;
+  phone?: string;
+  address?: string;
+  taxCode?: string;
 }
+
+const FACILITY_TYPES = [
+  { value: "general_hospital", label: "Bệnh viện Đa khoa" },
+  { value: "specialist_hospital", label: "Bệnh viện Chuyên khoa" },
+  { value: "general_clinic", label: "Phòng khám Đa khoa" },
+  { value: "specialist_clinic", label: "Phòng khám Chuyên khoa" },
+  { value: "mobile_screening", label: "Đoàn khám Sức khỏe Lưu động / Sự kiện" },
+  { value: "doctor_private", label: "Bác sĩ / Phòng mạch Tư nhân" },
+];
 
 /**
  * Slide-over Drawer: Thêm Hợp Đồng Thuê Máy Sonost 3000 (100% Dynamic DB Data)
@@ -61,17 +81,35 @@ export function CreateRentalDrawer({
   const [availableDevices, setAvailableDevices] = useState<AvailableDeviceOption[]>([]);
   const [partners, setPartners] = useState<PartnerOption[]>([]);
 
+  const todayStr = new Date().toISOString().split("T")[0];
+
   const [formData, setFormData] = useState<RentalFormData>({
     partnerName: "",
     partnerId: "",
+    partnerType: "general_clinic",
+    representativeName: "",
+    phone: "",
+    deliveryAddress: "",
+    taxCode: "",
     deviceSerial: "",
-    startDate: new Date().toISOString().split("T")[0],
-    durationMonths: "6",
-    monthlyFee: "15000000",
-    deposit: "30000000",
     packageType: "monthly",
+    startDate: todayStr,
+    endDate: "",
+    durationMonths: "6",
+    rentalFee: "15000000",
+    deposit: "30000000",
+    paymentTerms: "Thanh toán theo thỏa thuận",
     notes: "",
   });
+
+  // Calculate days difference if daily package
+  const calculateDailyDays = () => {
+    if (!formData.startDate || !formData.endDate) return 1;
+    const start = new Date(formData.startDate);
+    const end = new Date(formData.endDate);
+    const diff = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+    return diff >= 0 ? diff + 1 : 1;
+  };
 
   // Fetch available devices and partners from DB when drawer opens
   useEffect(() => {
@@ -118,19 +156,38 @@ export function CreateRentalDrawer({
       return;
     }
 
+    if (!formData.partnerName.trim()) {
+      alert("Vui lòng nhập tên Cơ sở Y tế / Bệnh viện đối tác.");
+      return;
+    }
+
+    if (!formData.representativeName.trim()) {
+      alert("Vui lòng nhập họ tên người đại diện / phụ trách.");
+      return;
+    }
+
+    if (!formData.phone.trim() || !/^(0|\+84)[0-9]{8,11}$/.test(formData.phone.replace(/\s+/g, ""))) {
+      alert("Vui lòng nhập đúng số điện thoại liên hệ (10 số).");
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const res = await fetch("/api/admin/rentals", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          monthlyFee: formData.rentalFee,
+          depositAmount: formData.deposit,
+        }),
       });
       const data = await res.json();
-      if (data.status === "success") {
+      if (data.status === "success" || data.success) {
         if (onSuccess) onSuccess(data.data);
         onClose();
       } else {
-        alert("Lỗi tạo hợp đồng: " + data.message);
+        alert("Lỗi tạo hợp đồng: " + (data.message || "Không xác định"));
       }
     } catch (err) {
       console.error(err);
@@ -143,7 +200,16 @@ export function CreateRentalDrawer({
   const handlePartnerSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedId = e.target.value;
     if (selectedId === "custom") {
-      setFormData((prev) => ({ ...prev, partnerId: "", partnerName: "" }));
+      setFormData((prev) => ({
+        ...prev,
+        partnerId: "",
+        partnerName: "",
+        partnerType: "general_clinic",
+        representativeName: "",
+        phone: "",
+        deliveryAddress: "",
+        taxCode: "",
+      }));
     } else {
       const found = partners.find((p) => p.id === selectedId);
       if (found) {
@@ -151,6 +217,11 @@ export function CreateRentalDrawer({
           ...prev,
           partnerId: found.id,
           partnerName: found.name,
+          partnerType: (found.type as any) || prev.partnerType,
+          representativeName: found.contactPerson || prev.representativeName,
+          phone: found.phone || prev.phone,
+          deliveryAddress: found.address || prev.deliveryAddress,
+          taxCode: found.taxCode || prev.taxCode,
         }));
       }
     }
@@ -176,17 +247,17 @@ export function CreateRentalDrawer({
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 28, stiffness: 300 }}
-            className="relative z-10 w-full max-w-md bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col h-full will-change-transform"
+            className="relative z-10 w-full max-w-lg bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col h-full will-change-transform"
           >
             {/* Header */}
-            <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+            <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-950/50">
               <div>
                 <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
                   <Plus size={16} className="text-[#0284c7]" />
-                  Tạo Hợp Đồng Thuê Sonost 3000
+                  Tạo Hợp Đồng Thuê Máy Sonost 3000
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                  Dữ liệu MongoDB: cấp phát máy sẵn sàng và đồng bộ trạng thái.
+                  Tự động liên kết hồ sơ Khách hàng B2B và cập nhật thiết bị sang trạng thái Đang cho thuê.
                 </p>
               </div>
               <button
@@ -199,173 +270,314 @@ export function CreateRentalDrawer({
             </div>
 
             {/* Form Body */}
-            <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-5 space-y-4 text-xs">
-              {/* Partner selection or custom name */}
-              <div className="space-y-1.5">
-                <label className="font-semibold text-slate-700 dark:text-slate-300 flex items-center justify-between">
-                  <span className="flex items-center gap-1.5">
-                    <Building2 size={14} className="text-[#0284c7]" />
-                    Cơ sở Y tế / Bệnh viện đối tác <span className="text-rose-500">*</span>
-                  </span>
-                </label>
+            <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 text-xs">
+              {/* PHẦN 1: THÔNG TIN CƠ SỞ Y TẾ ĐỐI TÁC */}
+              <div className="p-3 bg-slate-50 dark:bg-slate-800/40 rounded-lg border border-slate-200/80 dark:border-slate-700/80 space-y-3">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-[#0284c7] dark:text-cyan-400 uppercase tracking-wider font-mono-data border-b border-slate-200 dark:border-slate-700 pb-1.5">
+                  <Building2 size={14} />
+                  <span>1. Thông tin Cơ sở Y tế Đối tác</span>
+                </div>
 
                 {partners.length > 0 && (
-                  <select
-                    onChange={handlePartnerSelect}
-                    defaultValue=""
-                    className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md outline-none focus:border-[#0284c7] text-xs mb-1.5"
-                  >
-                    <option value="" disabled>
-                      -- Chọn nhanh từ danh sách Đối tác có sẵn --
-                    </option>
-                    {partners.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name} ({p.contactPerson || p.type})
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                      Chọn nhanh đối tác đã có trong hệ thống:
+                    </label>
+                    <select
+                      onChange={handlePartnerSelect}
+                      defaultValue=""
+                      className="w-full p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md outline-none focus:border-[#0284c7] text-xs"
+                    >
+                      <option value="" disabled>
+                        -- Chọn từ danh sách Đối tác B2B --
                       </option>
-                    ))}
-                    <option value="custom">✍️ Nhập tên cơ sở y tế mới...</option>
-                  </select>
+                      {partners.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name} ({p.contactPerson || p.type})
+                        </option>
+                      ))}
+                      <option value="custom">✍️ Nhập cơ sở y tế mới hoàn toàn...</option>
+                    </select>
+                  </div>
                 )}
 
-                <input
-                  type="text"
-                  required
-                  placeholder="VD: Bệnh viện Đa khoa Tâm Anh"
-                  value={formData.partnerName}
-                  onChange={(e) => setFormData({ ...formData, partnerName: e.target.value })}
-                  className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md outline-none focus:border-[#0284c7] focus:ring-1 focus:ring-[#0284c7]"
-                />
+                {/* Tên cơ sở y tế */}
+                <div className="space-y-1">
+                  <label className="font-semibold text-slate-700 dark:text-slate-300">
+                    Tên Cơ sở / Bệnh viện <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="VD: Bệnh viện Đa khoa HDX hoặc Phòng khám Xương Khớp"
+                    value={formData.partnerName}
+                    onChange={(e) => setFormData({ ...formData, partnerName: e.target.value })}
+                    className="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md outline-none focus:border-[#0284c7] font-medium"
+                  />
+                </div>
+
+                {/* Loại hình cơ sở y tế */}
+                <div className="space-y-1">
+                  <label className="font-semibold text-slate-700 dark:text-slate-300">
+                    Loại hình Cơ sở Y tế <span className="text-rose-500">*</span>
+                  </label>
+                  <select
+                    value={formData.partnerType}
+                    onChange={(e) => setFormData({ ...formData, partnerType: e.target.value })}
+                    className="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md outline-none focus:border-[#0284c7]"
+                  >
+                    {FACILITY_TYPES.map((t) => (
+                      <option key={t.value} value={t.value}>
+                        {t.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Người đại diện & SĐT */}
+                <div className="grid grid-cols-2 gap-2.5">
+                  <div className="space-y-1">
+                    <label className="font-semibold text-slate-700 dark:text-slate-300">
+                      Người đại diện / Phụ trách máy <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="VD: BS. Trần Văn Nam"
+                      value={formData.representativeName}
+                      onChange={(e) => setFormData({ ...formData, representativeName: e.target.value })}
+                      className="w-full p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md outline-none focus:border-[#0284c7]"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="font-semibold text-slate-700 dark:text-slate-300">
+                      Hotline / SĐT liên hệ <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="tel"
+                      required
+                      placeholder="VD: 0904123456"
+                      value={formData.phone}
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      className="w-full p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md outline-none focus:border-[#0284c7] font-mono-data"
+                    />
+                  </div>
+                </div>
+
+                {/* Địa chỉ & Mã số thuế */}
+                <div className="grid grid-cols-3 gap-2.5">
+                  <div className="col-span-2 space-y-1">
+                    <label className="font-semibold text-slate-700 dark:text-slate-300">
+                      Địa chỉ cơ sở / Vị trí đặt máy <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="VD: Số 123 Giải Phóng, Đống Đa, Hà Nội"
+                      value={formData.deliveryAddress}
+                      onChange={(e) => setFormData({ ...formData, deliveryAddress: e.target.value })}
+                      className="w-full p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md outline-none focus:border-[#0284c7]"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="font-semibold text-slate-700 dark:text-slate-300">
+                      Mã số thuế
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="0101234567"
+                      value={formData.taxCode}
+                      onChange={(e) => setFormData({ ...formData, taxCode: e.target.value })}
+                      className="w-full p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md outline-none focus:border-[#0284c7] font-mono-data"
+                    />
+                  </div>
+                </div>
               </div>
 
-              {/* Dynamic Device Serial Selector */}
-              <div className="space-y-1.5">
-                <label className="font-semibold text-slate-700 dark:text-slate-300 flex items-center justify-between">
-                  <span className="flex items-center gap-1.5">
-                    <Radio size={14} className="text-[#0284c7]" />
-                    Chọn máy Sonost 3000 sẵn sàng kho <span className="text-rose-500">*</span>
-                  </span>
-                  <span className="font-mono-data text-sky-600 dark:text-sky-400 font-bold">
-                    {availableDevices.length} máy sẵn sàng
-                  </span>
-                </label>
+              {/* PHẦN 2: THIẾT BỊ & GÓI THUÊ */}
+              <div className="p-3 bg-slate-50 dark:bg-slate-800/40 rounded-lg border border-slate-200/80 dark:border-slate-700/80 space-y-3">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-[#0284c7] dark:text-cyan-400 uppercase tracking-wider font-mono-data border-b border-slate-200 dark:border-slate-700 pb-1.5">
+                  <Radio size={14} />
+                  <span>2. Thiết bị &amp; Gói thời hạn thuê</span>
+                </div>
 
-                {isLoadingDevices ? (
-                  <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded border border-slate-200 dark:border-slate-700 flex items-center gap-2 text-slate-500">
-                    <Loader2 size={14} className="animate-spin text-[#0284c7]" />
-                    <span>Đang tải danh sách máy sẵn sàng từ MongoDB...</span>
-                  </div>
-                ) : availableDevices.length === 0 ? (
-                  <div className="p-3 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 rounded text-rose-700 dark:text-rose-400 flex items-start gap-2">
-                    <AlertTriangle size={16} className="shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-semibold">Hết máy sẵn sàng trong kho</p>
-                      <p className="text-xs mt-0.5">
-                        Tất cả các máy đang trong hợp đồng thuê hoặc đang bảo trì. Vui lòng hoàn tất hợp đồng cũ hoặc kiểm chuẩn lại thiết bị trong kho trước khi tạo hợp đồng mới.
-                      </p>
+                {/* Chọn máy sẵn sàng */}
+                <div className="space-y-1.5">
+                  <label className="font-semibold text-slate-700 dark:text-slate-300 flex items-center justify-between">
+                    <span>Chọn máy Sonost 3000 sẵn sàng kho <span className="text-rose-500">*</span></span>
+                    <span className="font-mono-data text-sky-600 dark:text-sky-400 font-bold">
+                      {availableDevices.length} máy sẵn sàng
+                    </span>
+                  </label>
+
+                  {isLoadingDevices ? (
+                    <div className="p-2.5 bg-white dark:bg-slate-900 rounded border border-slate-200 dark:border-slate-700 flex items-center gap-2 text-slate-500">
+                      <Loader2 size={14} className="animate-spin text-[#0284c7]" />
+                      <span>Đang tải máy sẵn sàng...</span>
+                    </div>
+                  ) : availableDevices.length === 0 ? (
+                    <div className="p-2.5 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 rounded text-rose-700 dark:text-rose-400 flex items-start gap-2">
+                      <AlertTriangle size={15} className="shrink-0 mt-0.5" />
+                      <p className="text-xs">Hiện tại không còn máy sẵn sàng trong kho.</p>
+                    </div>
+                  ) : (
+                    <select
+                      value={formData.deviceSerial}
+                      onChange={(e) => setFormData({ ...formData, deviceSerial: e.target.value })}
+                      className="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md outline-none focus:border-[#0284c7] font-mono-data font-semibold"
+                    >
+                      {availableDevices.map((dev) => (
+                        <option key={dev.serial} value={dev.serial}>
+                          #{dev.serial} — {dev.model} ({dev.location})
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+
+                {/* Gói thời hạn thuê */}
+                <div className="space-y-1">
+                  <label className="font-semibold text-slate-700 dark:text-slate-300">
+                    Gói thời hạn thuê <span className="text-rose-500">*</span>
+                  </label>
+                  <select
+                    value={formData.packageType}
+                    onChange={(e) => {
+                      const val = e.target.value as any;
+                      setFormData((prev) => ({
+                        ...prev,
+                        packageType: val,
+                        rentalFee: val === "daily" ? "1500000" : "15000000",
+                        endDate: val === "daily" ? prev.startDate : prev.endDate,
+                      }));
+                    }}
+                    className="w-full p-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md outline-none focus:border-[#0284c7] font-medium"
+                  >
+                    <option value="daily">Thuê theo ngày / Khám lưu động (1.500.000đ/ngày)</option>
+                    <option value="monthly">Thuê theo tháng (Phòng khám / Bệnh viện)</option>
+                    <option value="long_term">Thuê dài hạn &gt; 6 tháng (Ưu đãi bảo trì toàn diện)</option>
+                  </select>
+                </div>
+
+                {/* Thời gian thuê: Nếu Daily -> Start/End date; Nếu Monthly/Long-term -> Duration */}
+                {formData.packageType === "daily" ? (
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <div className="space-y-1">
+                      <label className="font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                        <Calendar size={13} className="text-[#0284c7]" />
+                        Ngày bắt đầu
+                      </label>
+                      <input
+                        type="date"
+                        value={formData.startDate}
+                        onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                        className="w-full p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md outline-none focus:border-[#0284c7]"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="font-semibold text-slate-700 dark:text-slate-300 flex items-center justify-between">
+                        <span className="flex items-center gap-1.5">
+                          <Calendar size={13} className="text-emerald-600" />
+                          Ngày kết thúc
+                        </span>
+                        <span className="text-[11px] font-mono-data text-emerald-600 font-bold">
+                          ({calculateDailyDays()} ngày)
+                        </span>
+                      </label>
+                      <input
+                        type="date"
+                        value={formData.endDate || formData.startDate}
+                        min={formData.startDate}
+                        onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                        className="w-full p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md outline-none focus:border-[#0284c7]"
+                      />
                     </div>
                   </div>
                 ) : (
-                  <select
-                    value={formData.deviceSerial}
-                    onChange={(e) => setFormData({ ...formData, deviceSerial: e.target.value })}
-                    className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md outline-none focus:border-[#0284c7] font-mono-data"
-                  >
-                    {availableDevices.map((dev) => (
-                      <option key={dev.serial} value={dev.serial}>
-                        #{dev.serial} — {dev.model} ({dev.location})
-                      </option>
-                    ))}
-                  </select>
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <div className="space-y-1">
+                      <label className="font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                        <Calendar size={13} className="text-[#0284c7]" />
+                        Ngày bắt đầu
+                      </label>
+                      <input
+                        type="date"
+                        value={formData.startDate}
+                        onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                        className="w-full p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md outline-none focus:border-[#0284c7]"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="font-semibold text-slate-700 dark:text-slate-300">
+                        Thời hạn thuê
+                      </label>
+                      <select
+                        value={formData.durationMonths}
+                        onChange={(e) => setFormData({ ...formData, durationMonths: e.target.value })}
+                        className="w-full p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md outline-none focus:border-[#0284c7]"
+                      >
+                        <option value="1">01 tháng</option>
+                        <option value="3">03 tháng (Ngắn hạn)</option>
+                        <option value="6">06 tháng (Tiêu chuẩn)</option>
+                        <option value="12">12 tháng (Dài hạn - Ưu đãi)</option>
+                      </select>
+                    </div>
+                  </div>
                 )}
-              </div>
 
-              {/* Rental package type */}
-              <div className="space-y-1">
-                <label className="font-semibold text-slate-700 dark:text-slate-300">
-                  Gói dịch vụ cho thuê
-                </label>
-                <select
-                  value={formData.packageType}
-                  onChange={(e) => setFormData({ ...formData, packageType: e.target.value })}
-                  className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md outline-none focus:border-[#0284c7]"
-                >
-                  <option value="monthly">Thuê tháng tiêu chuẩn (Phòng khám / BV)</option>
-                  <option value="long_term">Thuê dài hạn &gt; 12 tháng (Ưu đãi bảo trì)</option>
-                  <option value="daily_event">Thuê theo ngày / sự kiện tầm soát lưu động</option>
-                </select>
-              </div>
+                {/* Đơn giá thuê & Tiền cọc */}
+                <div className="grid grid-cols-2 gap-2.5">
+                  <div className="space-y-1">
+                    <label className="font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                      <DollarSign size={13} className="text-emerald-600" />
+                      Đơn giá thuê (VNĐ) <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      value={formData.rentalFee}
+                      onChange={(e) => setFormData({ ...formData, rentalFee: e.target.value })}
+                      placeholder={formData.packageType === "daily" ? "VD: 1.500.000đ/ngày" : "VD: 15.000.000đ/tháng"}
+                      className="w-full p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md outline-none focus:border-[#0284c7] font-mono-data font-semibold"
+                      required
+                    />
+                    <p className="text-[10px] text-slate-400">
+                      {formData.packageType === "daily"
+                        ? "Gợi ý: 1.500.000đ/ngày khám đoàn"
+                        : "Gợi ý: 15.000.000đ - 20.000.000đ/tháng"}
+                    </p>
+                  </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                    <Calendar size={14} className="text-[#0284c7]" />
-                    Ngày bắt đầu
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.startDate}
-                    onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                    className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md outline-none focus:border-[#0284c7]"
-                  />
+                  <div className="space-y-1">
+                    <label className="font-semibold text-slate-700 dark:text-slate-300">
+                      Tiền đặt cọc thiết bị (VNĐ)
+                    </label>
+                    <input
+                      type="number"
+                      value={formData.deposit}
+                      onChange={(e) => setFormData({ ...formData, deposit: e.target.value })}
+                      className="w-full p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md outline-none focus:border-[#0284c7] font-mono-data"
+                    />
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <label className="font-semibold text-slate-700 dark:text-slate-300">
-                    Thời hạn thuê
-                  </label>
-                  <select
-                    value={formData.durationMonths}
-                    onChange={(e) => setFormData({ ...formData, durationMonths: e.target.value })}
-                    className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md outline-none focus:border-[#0284c7]"
-                  >
-                    <option value="1">01 tháng (Sự kiện / Khám đoàn)</option>
-                    <option value="3">03 tháng (Ngắn hạn)</option>
-                    <option value="6">06 tháng (Tiêu chuẩn)</option>
-                    <option value="12">12 tháng (Dài hạn - Ưu đãi)</option>
-                  </select>
-                </div>
-              </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                    <DollarSign size={14} className="text-emerald-600" />
-                    Đơn giá thuê / tháng (VNĐ)
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.monthlyFee}
-                    onChange={(e) => setFormData({ ...formData, monthlyFee: e.target.value })}
-                    className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md outline-none focus:border-[#0284c7] font-mono-data"
-                  />
-                </div>
                 <div className="space-y-1">
                   <label className="font-semibold text-slate-700 dark:text-slate-300">
-                    Tiền đặt cọc máy (VNĐ)
+                    Ghi chú điều khoản bổ sung
                   </label>
-                  <input
-                    type="number"
-                    value={formData.deposit}
-                    onChange={(e) => setFormData({ ...formData, deposit: e.target.value })}
-                    className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md outline-none focus:border-[#0284c7] font-mono-data"
+                  <textarea
+                    rows={2}
+                    placeholder="VD: Bao gồm 02 can gel siêu âm gót chân và hỗ trợ trực tuyến 24/7..."
+                    value={formData.notes}
+                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                    className="w-full p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md outline-none focus:border-[#0284c7]"
                   />
                 </div>
-              </div>
-
-              <div className="space-y-1">
-                <label className="font-semibold text-slate-700 dark:text-slate-300">
-                  Ghi chú điều khoản bổ sung
-                </label>
-                <textarea
-                  rows={3}
-                  placeholder="VD: Bao gồm 02 can gel siêu âm gót chân và hiệu chuẩn định kỳ 3 tháng..."
-                  value={formData.notes}
-                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md outline-none focus:border-[#0284c7]"
-                />
               </div>
 
               {/* Submit Action */}
-              <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex gap-2">
+              <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex gap-2">
                 <button
                   type="button"
                   onClick={onClose}
@@ -376,17 +588,17 @@ export function CreateRentalDrawer({
                 <button
                   type="submit"
                   disabled={isSubmitting || availableDevices.length === 0}
-                  className="w-2/3 py-2.5 px-3 bg-[#0284c7] hover:bg-[#0369a1] text-white rounded-md font-semibold transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-2/3 py-2.5 px-3 bg-[#0284c7] hover:bg-[#0369a1] text-white rounded-md font-semibold transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
                 >
                   {isSubmitting ? (
                     <>
                       <Loader2 size={14} className="animate-spin" />
-                      <span>Đang lưu vào MongoDB...</span>
+                      <span>Đang lưu hợp đồng...</span>
                     </>
                   ) : (
                     <>
                       <CheckCircle2 size={14} />
-                      <span>Xác nhận Cho thuê</span>
+                      <span>Xác nhận Ký Hợp Đồng</span>
                     </>
                   )}
                 </button>

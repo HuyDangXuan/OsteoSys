@@ -45,12 +45,30 @@ export function detectPartnerType(name: string, explicitType?: PartnerType): Par
   if (explicitType) return explicitType;
   const lower = name.toLowerCase();
   if (
+    lower.includes("chuyên khoa") &&
+    (lower.includes("bệnh viện") || lower.includes("bv "))
+  ) {
+    return "specialist_hospital";
+  }
+  if (
     lower.includes("bệnh viện") ||
     lower.includes("bv ") ||
     lower.includes("hospital") ||
     lower.includes("viện ")
   ) {
-    return "hospital";
+    return "general_hospital";
+  }
+  if (
+    lower.includes("chuyên khoa") ||
+    lower.includes("sản") ||
+    lower.includes("nhi") ||
+    lower.includes("cơ xương khớp") ||
+    lower.includes("xương khớp") ||
+    lower.includes("tai mũi họng") ||
+    lower.includes("mắt") ||
+    lower.includes("da liễu")
+  ) {
+    return "specialist_clinic";
   }
   if (
     lower.includes("phòng khám") ||
@@ -59,17 +77,19 @@ export function detectPartnerType(name: string, explicitType?: PartnerType): Par
     lower.includes("trung tâm y tế") ||
     lower.includes("ttyt")
   ) {
-    return "clinic";
+    return "general_clinic";
   }
   if (
+    lower.includes("lưu động") ||
+    lower.includes("khám đoàn") ||
+    lower.includes("sự kiện") ||
+    lower.includes("tầm soát") ||
     lower.includes("công ty") ||
     lower.includes("doanh nghiệp") ||
     lower.includes("tập đoàn") ||
-    lower.includes("tổng công ty") ||
-    lower.includes("cp ") ||
-    lower.includes("tnhh")
+    lower.includes("tổng công ty")
   ) {
-    return "enterprise";
+    return "mobile_screening";
   }
   if (
     lower.includes("bs.") ||
@@ -78,11 +98,12 @@ export function detectPartnerType(name: string, explicitType?: PartnerType): Par
     lower.includes("tiến sĩ") ||
     lower.includes("pgs.") ||
     lower.includes("gs.") ||
-    lower.includes("dr.")
+    lower.includes("dr.") ||
+    lower.includes("phòng mạch")
   ) {
-    return "doctor";
+    return "doctor_private";
   }
-  return "clinic";
+  return "general_clinic";
 }
 
 /**
