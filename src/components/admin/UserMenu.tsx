@@ -11,8 +11,23 @@ import {
   Activity,
   FileCheck,
 } from "lucide-react";
+import { useAuth } from "@/components/providers/auth-provider";
+import Link from "next/link";
+
+/**
+ * Returns initials from full name, e.g. "Admin" -> "A", "Huy Đặng" -> "H"
+ */
+function getInitials(name?: string | null): string {
+  if (!name || !name.trim()) return "U";
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) {
+    return parts[0].charAt(0).toUpperCase();
+  }
+  return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+}
 
 export default function UserMenu() {
+  const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -26,6 +41,11 @@ export default function UserMenu() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const displayName = user?.fullName || "Người dùng";
+  const displayEmail = user?.email || "admin@osteosys.vn";
+  const displayRole = user?.roleLabel || (user?.role === "super_admin" ? "Super Admin" : "Quản trị viên");
+  const initials = getInitials(displayName);
+
   return (
     <div className="relative" ref={menuRef}>
       {/* Trigger button */}
@@ -37,17 +57,17 @@ export default function UserMenu() {
       >
         <div className="relative">
           <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#0284c7] to-cyan-400 text-white flex items-center justify-center font-bold text-xs shadow-sm">
-            TH
+            {initials}
           </div>
           <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full" />
         </div>
 
         <div className="hidden md:flex flex-col text-left">
-          <span className="text-xs font-semibold text-slate-900 dark:text-slate-100 leading-tight">
-            BS. Nguyễn Trọng Hải
+          <span className="text-xs font-semibold text-slate-900 dark:text-slate-100 leading-tight truncate max-w-[140px]">
+            {displayName}
           </span>
-          <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono-data">
-            Kỹ Sư Trưởng Sonost
+          <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono-data truncate max-w-[140px]">
+            {displayRole}
           </span>
         </div>
 
@@ -74,55 +94,58 @@ export default function UserMenu() {
             <div className="p-3.5 bg-slate-50/70 dark:bg-[#0b0f17]/80">
               <div className="flex items-center gap-2.5">
                 <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#0284c7] to-cyan-400 text-white flex items-center justify-center font-bold text-sm shadow-sm">
-                  TH
+                  {initials}
                 </div>
                 <div className="min-w-0">
                   <p className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
-                    BS. Nguyễn Trọng Hải
+                    {displayName}
                   </p>
                   <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate font-mono-data">
-                    hai.nguyen@osteosys.vn
+                    {displayEmail}
                   </p>
                 </div>
               </div>
 
               <div className="mt-2.5 flex items-center gap-1.5 px-2 py-1 bg-sky-50 dark:bg-cyan-950/60 rounded border border-sky-200/60 dark:border-cyan-900/60">
-                <ShieldCheck size={13} className="text-[#0284c7] dark:text-cyan-400" />
-                <span className="text-[11px] font-medium text-[#0284c7] dark:text-cyan-300">
-                  Quyền Quản trị viên Toàn quyền
+                <ShieldCheck size={13} className="text-[#0284c7] dark:text-cyan-400 shrink-0" />
+                <span className="text-[11px] font-medium text-[#0284c7] dark:text-cyan-300 truncate">
+                  {displayRole}
                 </span>
               </div>
             </div>
 
             {/* Menu items */}
             <div className="p-1.5 text-xs text-slate-700 dark:text-slate-300">
-              <a
+              <Link
                 href="/admin/cai-dat"
                 onClick={() => setIsOpen(false)}
                 className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors"
               >
                 <User size={14} className="text-slate-400" />
                 <span>Hồ sơ &amp; Chứng chỉ kỹ thuật</span>
-              </a>
-              <a
+              </Link>
+              <Link
                 href="/admin/sua-chua"
                 onClick={() => setIsOpen(false)}
                 className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors"
               >
                 <Activity size={14} className="text-slate-400" />
                 <span>Nhật ký hiệu chuẩn thiết bị</span>
-              </a>
-              <a
+              </Link>
+              <Link
                 href="/admin/cai-dat"
                 onClick={() => setIsOpen(false)}
                 className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors"
               >
                 <FileCheck size={14} className="text-slate-400" />
                 <span>Mẫu in phiếu đo BMD &amp; T-score</span>
-              </a>
+              </Link>
               <a
                 href="#"
-                onClick={() => setIsOpen(false)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setIsOpen(false);
+                }}
                 className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors"
               >
                 <HelpCircle size={14} className="text-slate-400" />
@@ -132,14 +155,14 @@ export default function UserMenu() {
 
             {/* Logout */}
             <div className="p-1.5 bg-slate-50/50 dark:bg-[#0b0f17]/60">
-              <a
+              <Link
                 href="/login"
                 onClick={() => setIsOpen(false)}
                 className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
               >
                 <LogOut size={14} />
                 <span>Đăng xuất tài khoản</span>
-              </a>
+              </Link>
             </div>
           </motion.div>
         )}
@@ -147,3 +170,4 @@ export default function UserMenu() {
     </div>
   );
 }
+

@@ -34,6 +34,8 @@ import { SkeletonDeviceCard, SkeletonDataTable } from "@/components/ui/skeleton"
 import { TableEmptyState } from "@/components/admin/TableStates";
 import { DynamicStatCards, DeviceStatsData } from "@/components/admin/DynamicStatCards";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { DeviceEditModal } from "@/components/admin/device-edit-modal";
+import { FormDeviceData } from "@/lib/utils/device-form-helper";
 import {
   getDevices,
   createDevice,
@@ -42,6 +44,7 @@ import {
   quickCalibrateDevice,
   DeviceListItem,
 } from "@/lib/actions/devices";
+import { getCurrentAccount, AccountListItem } from "@/lib/actions/accounts";
 
 export const dynamic = "force-dynamic";
 
@@ -55,6 +58,7 @@ const ACCESSORY_OPTIONS = [
 ];
 
 export default function InventoryManagementPage() {
+  const [currentUser, setCurrentUser] = useState<AccountListItem | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [calibrationFilter, setCalibrationFilter] = useState<"all" | "expiring_30_days" | "overdue">("all");
@@ -69,29 +73,6 @@ export default function InventoryManagementPage() {
   const [isCalibrateModalOpen, setIsCalibrateModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedDevice, setSelectedDevice] = useState<DeviceListItem | null>(null);
-
-  // Form States for Create/Edit
-  const [formData, setFormData] = useState({
-    serialNumber: "",
-    model: "Sonost 3000 PRO" as "Sonost 3000" | "Sonost 3000 PRO",
-    yearManufactured: 2024,
-    probeType: "Đầu dò gót chân tiêu chuẩn 0.5MHz",
-    location: "Kho Tổng Hà Nội",
-    currentStatus: "available" as any,
-    purchaseDate: new Date().toISOString().split("T")[0],
-    lastCalibrationDate: new Date().toISOString().split("T")[0],
-    qcResult: "passed" as "passed" | "warning" | "failed",
-    phantomCv: 0.8,
-    calibratedBy: "Kỹ sư Nguyễn Văn Tuấn (Kỹ Thuật OsteoSys)",
-    certifyingBody: "Trung tâm Kiểm chuẩn Y Sinh OsteoSys",
-    accessoriesIncluded: [
-      "Bóng dầu Silicone tiếp xúc",
-      "Khối Phantom Hologic kiểm chuẩn",
-      "Dây cáp nguồn chuẩn y tế",
-      "Giấy in nhiệt 58mm",
-    ],
-    notes: "",
-  });
 
   // Fast QC Calibration State
   const [qcCv, setQcCv] = useState(0.8);
@@ -153,51 +134,30 @@ export default function InventoryManagementPage() {
     fetchStats();
   }, [fetchStats]);
 
+  // 1. Fetch Current Logged-in User Session
+  useEffect(() => {
+    async function loadCurrentUser() {
+      try {
+        const user = await getCurrentAccount();
+        if (user) {
+          setCurrentUser(user);
+        }
+      } catch (err) {
+        console.error("Failed to load current account session:", err);
+      }
+    }
+    loadCurrentUser();
+  }, []);
+
   // Open Create Modal
   const handleOpenCreateModal = () => {
-    setFormData({
-      serialNumber: `OST-3000-${Math.floor(1000 + Math.random() * 9000)}`,
-      model: "Sonost 3000 PRO",
-      yearManufactured: new Date().getFullYear(),
-      probeType: "Đầu dò gót chân tiêu chuẩn 0.5MHz",
-      location: "Kho Tổng Hà Nội",
-      currentStatus: "available",
-      purchaseDate: new Date().toISOString().split("T")[0],
-      lastCalibrationDate: new Date().toISOString().split("T")[0],
-      qcResult: "passed",
-      phantomCv: 0.8,
-      calibratedBy: "Kỹ sư Nguyễn Văn Tuấn (Kỹ Thuật OsteoSys)",
-      certifyingBody: "Trung tâm Kiểm chuẩn Y Sinh OsteoSys",
-      accessoriesIncluded: [
-        "Bóng dầu Silicone tiếp xúc",
-        "Khối Phantom Hologic kiểm chuẩn",
-        "Dây cáp nguồn chuẩn y tế",
-        "Giấy in nhiệt 58mm",
-      ],
-      notes: "",
-    });
+    setSelectedDevice(null);
     setIsCreateModalOpen(true);
   };
 
   // Open Edit Modal
   const handleOpenEditModal = (device: DeviceListItem) => {
     setSelectedDevice(device);
-    setFormData({
-      serialNumber: device.serial,
-      model: device.model as any,
-      yearManufactured: device.year,
-      probeType: "Đầu dò gót chân tiêu chuẩn 0.5MHz",
-      location: device.location,
-      currentStatus: device.status,
-      purchaseDate: new Date().toISOString().split("T")[0],
-      lastCalibrationDate: new Date().toISOString().split("T")[0],
-      qcResult: device.qcResult,
-      phantomCv: parseFloat(device.cvScore) || 0.8,
-      calibratedBy: device.calibratedBy || "Kỹ sư OsteoSys",
-      certifyingBody: device.certifyingBody || "Trung tâm Kiểm chuẩn Y Sinh OsteoSys",
-      accessoriesIncluded: device.accessories.length > 0 ? device.accessories : ACCESSORY_OPTIONS.slice(0, 4),
-      notes: device.notes || "",
-    });
     setIsEditModalOpen(true);
   };
 
@@ -217,28 +177,31 @@ export default function InventoryManagementPage() {
     setIsDeleteModalOpen(true);
   };
 
-  // Submit Create Device
-  const handleCreateSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Submit Create Device from Modal
+  const handleCreateSubmit = async (data: FormDeviceData) => {
     try {
       const res = await createDevice({
-        serialNumber: formData.serialNumber,
-        model: formData.model,
-        yearManufactured: Number(formData.yearManufactured),
-        probeType: formData.probeType,
-        purchaseDate: new Date(formData.purchaseDate),
-        location: formData.location,
-        currentStatus: formData.currentStatus,
+        serialNumber: data.serialNumber,
+        model: data.model,
+        yearManufactured: Number(data.yearManufactured),
+        probeType: data.probeType,
+        purchaseDate: new Date(data.purchaseDate),
+        location: data.location,
+        currentStatus: data.currentStatus,
         calibration: {
-          lastDate: new Date(formData.lastCalibrationDate),
-          qcResult: formData.qcResult,
-          phantomCv: Number(formData.phantomCv),
-          calibratedBy: formData.calibratedBy,
-          certifyingBody: formData.certifyingBody,
-          notes: formData.notes,
+          lastDate: new Date(data.lastCalibrationDate),
+          nextDueDate: data.nextDueDate ? new Date(data.nextDueDate) : undefined,
+          certifiedBy: data.certifiedBy || currentUser?.fullName || "Kỹ sư Kiểm Chuẩn",
+          certificateNumber: data.certificateNumber,
+          iscdStandard: data.iscdStandard,
+          qcResult: data.qcResult,
+          phantomCv: Number(data.phantomCv),
+          certifyingBody: data.certifyingBody,
+          notes: data.notes,
         },
-        accessoriesIncluded: formData.accessoriesIncluded,
-        notes: formData.notes,
+        accessories: data.accessoriesIncluded,
+        accessoriesIncluded: data.accessoriesIncluded,
+        notes: data.notes,
       });
 
       if (res.success) {
@@ -253,26 +216,31 @@ export default function InventoryManagementPage() {
     }
   };
 
-  // Submit Update Device
-  const handleEditSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Submit Update Device from Modal
+  const handleEditSubmit = async (data: FormDeviceData) => {
     if (!selectedDevice) return;
     try {
       const res = await updateDevice(selectedDevice.serial, {
-        model: formData.model,
-        yearManufactured: Number(formData.yearManufactured),
-        location: formData.location,
-        currentStatus: formData.currentStatus,
+        model: data.model,
+        yearManufactured: Number(data.yearManufactured),
+        location: data.location,
+        probeType: data.probeType,
+        currentStatus: data.currentStatus,
+        purchaseDate: new Date(data.purchaseDate),
         calibration: {
-          lastDate: new Date(formData.lastCalibrationDate),
-          qcResult: formData.qcResult,
-          phantomCv: Number(formData.phantomCv),
-          calibratedBy: formData.calibratedBy,
-          certifyingBody: formData.certifyingBody,
-          notes: formData.notes,
+          lastDate: new Date(data.lastCalibrationDate),
+          nextDueDate: data.nextDueDate ? new Date(data.nextDueDate) : undefined,
+          certifiedBy: data.certifiedBy || currentUser?.fullName || "Kỹ sư Kiểm Chuẩn",
+          certificateNumber: data.certificateNumber,
+          iscdStandard: data.iscdStandard,
+          qcResult: data.qcResult,
+          phantomCv: Number(data.phantomCv),
+          certifyingBody: data.certifyingBody,
+          notes: data.notes,
         },
-        accessoriesIncluded: formData.accessoriesIncluded,
-        notes: formData.notes,
+        accessories: data.accessoriesIncluded,
+        accessoriesIncluded: data.accessoriesIncluded,
+        notes: data.notes,
       });
 
       if (res.success) {
@@ -372,18 +340,6 @@ export default function InventoryManagementPage() {
     link.click();
     document.body.removeChild(link);
     toast.success("Đã xuất thành công danh sách kho thiết bị!");
-  };
-
-  const toggleAccessory = (acc: string) => {
-    setFormData((prev) => {
-      const exists = prev.accessoriesIncluded.includes(acc);
-      return {
-        ...prev,
-        accessoriesIncluded: exists
-          ? prev.accessoriesIncluded.filter((item) => item !== acc)
-          : [...prev.accessoriesIncluded, acc],
-      };
-    });
   };
 
   return (
@@ -729,276 +685,18 @@ export default function InventoryManagementPage() {
         </div>
       )}
 
-      {/* 5. Create / Edit Slide-over Modal (2 Columns) */}
-      <AnimatePresence>
-        {(isCreateModalOpen || isEditModalOpen) && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-150">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.96, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.96, y: 10 }}
-              className="w-full max-w-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
-            >
-              {/* Modal Header */}
-              <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-[#0b0f17]">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-[#0284c7] dark:bg-cyan-600 text-white flex items-center justify-center">
-                    <Radio size={16} />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                      {isCreateModalOpen ? "Nhập Kho Thiết Bị Sonost 3000 Mới" : `Chỉnh Sửa Thiết Bị: ${formData.serialNumber}`}
-                    </h3>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                      Hồ sơ kỹ thuật y tế &amp; thông số kiểm chuẩn Phantom ISCD
-                    </p>
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => {
-                    setIsCreateModalOpen(false);
-                    setIsEditModalOpen(false);
-                  }}
-                  className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg"
-                >
-                  <X size={16} />
-                </button>
-              </div>
-
-              {/* Form Body 2 Columns */}
-              <form onSubmit={isCreateModalOpen ? handleCreateSubmit : handleEditSubmit} className="p-6 overflow-y-auto space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* CỘT 1: Thông tin thiết bị & Đầu dò */}
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-1.5 pb-2 border-b border-slate-100 dark:border-slate-800 text-xs font-bold text-[#0284c7] dark:text-cyan-400 uppercase tracking-wider font-mono-data">
-                      <Radio size={14} />
-                      <span>1. Thông tin Thiết bị &amp; Vị trí</span>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                        Số Serial Thiết bị *
-                      </label>
-                      <input
-                        type="text"
-                        disabled={isEditModalOpen}
-                        value={formData.serialNumber}
-                        onChange={(e) => setFormData({ ...formData, serialNumber: e.target.value })}
-                        placeholder="VD: OST-3000-8842"
-                        className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-xs font-mono-data font-semibold text-slate-900 dark:text-slate-100 outline-none focus:ring-1 focus:ring-[#0284c7] disabled:opacity-60"
-                        required
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                          Model máy
-                        </label>
-                        <select
-                          value={formData.model}
-                          onChange={(e) => setFormData({ ...formData, model: e.target.value as any })}
-                          className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-xs text-slate-900 dark:text-slate-100 outline-none"
-                        >
-                          <option value="Sonost 3000 PRO">Sonost 3000 PRO</option>
-                          <option value="Sonost 3000">Sonost 3000 Tiêu chuẩn</option>
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                          Năm sản xuất
-                        </label>
-                        <input
-                          type="number"
-                          value={formData.yearManufactured}
-                          onChange={(e) => setFormData({ ...formData, yearManufactured: Number(e.target.value) })}
-                          className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-xs font-mono-data text-slate-900 dark:text-slate-100 outline-none"
-                          min={2018}
-                          max={2030}
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                        Loại đầu dò siêu âm
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.probeType}
-                        onChange={(e) => setFormData({ ...formData, probeType: e.target.value })}
-                        className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-xs text-slate-900 dark:text-slate-100 outline-none"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                        Vị trí lưu kho / Cơ sở bàn giao *
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.location}
-                        onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                        placeholder="VD: Kho Tổng Hà Nội hoặc BV Đa khoa Xanh Pôn"
-                        className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-xs text-slate-900 dark:text-slate-100 outline-none focus:ring-1 focus:ring-[#0284c7]"
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                        Trạng thái thiết bị
-                      </label>
-                      <select
-                        value={formData.currentStatus}
-                        onChange={(e) => setFormData({ ...formData, currentStatus: e.target.value })}
-                        className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-xs text-slate-900 dark:text-slate-100 outline-none font-medium"
-                      >
-                        <option value="available">Sẵn sàng bàn giao (Kho)</option>
-                        <option value="rented">Đang cho thuê</option>
-                        <option value="under_maintenance">Bảo trì / Kiểm chuẩn</option>
-                        <option value="repairing">Đang sửa chữa</option>
-                        <option value="decommissioned">Đã thanh lý / Ngừng sử dụng</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  {/* CỘT 2: Hồ sơ Kiểm định Y tế & Phụ kiện */}
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-1.5 pb-2 border-b border-slate-100 dark:border-slate-800 text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider font-mono-data">
-                      <ShieldCheck size={14} />
-                      <span>2. Hồ sơ Kiểm chuẩn ISCD &amp; Phụ kiện</span>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                          Ngày kiểm chuẩn gần nhất
-                        </label>
-                        <input
-                          type="date"
-                          value={formData.lastCalibrationDate}
-                          onChange={(e) => setFormData({ ...formData, lastCalibrationDate: e.target.value })}
-                          className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-xs font-mono-data text-slate-900 dark:text-slate-100 outline-none"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                          Độ biến thiên Phantom CV %
-                        </label>
-                        <input
-                          type="number"
-                          step="0.1"
-                          value={formData.phantomCv}
-                          onChange={(e) => setFormData({ ...formData, phantomCv: Number(e.target.value) })}
-                          className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-xs font-mono-data font-semibold text-slate-900 dark:text-slate-100 outline-none"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                        Kết quả Đánh giá QC
-                      </label>
-                      <select
-                        value={formData.qcResult}
-                        onChange={(e) => setFormData({ ...formData, qcResult: e.target.value as any })}
-                        className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-xs text-slate-900 dark:text-slate-100 outline-none"
-                      >
-                        <option value="passed">✅ Đạt chuẩn ISCD (Passed - CV ≤ 1.5%)</option>
-                        <option value="warning">⚠️ Cần kiểm tra lại (Warning - CV &gt; 1.5%)</option>
-                        <option value="failed">❌ Không đạt chuẩn (Failed)</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                        Đơn vị cấp chứng nhận kiểm định
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.certifyingBody}
-                        onChange={(e) => setFormData({ ...formData, certifyingBody: e.target.value })}
-                        className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-xs text-slate-900 dark:text-slate-100 outline-none"
-                      />
-                    </div>
-
-                    {/* Phụ kiện đi kèm checklist */}
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                        Phụ kiện bàn giao đi kèm:
-                      </label>
-                      <div className="grid grid-cols-2 gap-1.5">
-                        {ACCESSORY_OPTIONS.map((acc) => {
-                          const checked = formData.accessoriesIncluded.includes(acc);
-                          return (
-                            <button
-                              type="button"
-                              key={acc}
-                              onClick={() => toggleAccessory(acc)}
-                              className={`flex items-center gap-1.5 px-2 py-1.5 rounded text-[11px] text-left transition-colors border ${
-                                checked
-                                  ? "bg-sky-50 dark:bg-cyan-950/60 border-sky-300 dark:border-cyan-800 text-[#0284c7] dark:text-cyan-300 font-medium"
-                                  : "bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400"
-                              }`}
-                            >
-                              <div
-                                className={`w-3.5 h-3.5 rounded flex items-center justify-center ${
-                                  checked ? "bg-[#0284c7] text-white" : "border border-slate-300 dark:border-slate-700"
-                                }`}
-                              >
-                                {checked && <Check size={10} />}
-                              </div>
-                              <span className="truncate">{acc}</span>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                        Ghi chú kỹ thuật
-                      </label>
-                      <textarea
-                        rows={2}
-                        value={formData.notes}
-                        onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                        placeholder="Ghi chú về màng bóng silicone, kết nối DICOM..."
-                        className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-xs text-slate-900 dark:text-slate-100 outline-none"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Modal Footer */}
-                <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-3">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsCreateModalOpen(false);
-                      setIsEditModalOpen(false);
-                    }}
-                    className="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-medium transition-colors"
-                  >
-                    Hủy bỏ
-                  </button>
-
-                  <button
-                    type="submit"
-                    className="px-5 py-2 bg-[#0284c7] hover:bg-[#0369a1] dark:bg-cyan-600 dark:hover:bg-cyan-500 text-white rounded-lg text-xs font-bold shadow-2xs transition-colors"
-                  >
-                    {isCreateModalOpen ? "Lưu & Nhập Kho Máy" : "Cập Nhật Thông Số"}
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+      {/* 5. Create / Edit Device Modal Component */}
+      <DeviceEditModal
+        isOpen={isCreateModalOpen || isEditModalOpen}
+        mode={isCreateModalOpen ? "create" : "edit"}
+        device={selectedDevice}
+        currentUserFullName={currentUser?.fullName || "Kỹ sư Kiểm Chuẩn"}
+        onClose={() => {
+          setIsCreateModalOpen(false);
+          setIsEditModalOpen(false);
+        }}
+        onSubmit={isCreateModalOpen ? handleCreateSubmit : handleEditSubmit}
+      />
 
       {/* 6. Quick QC Calibration Modal */}
       <AnimatePresence>

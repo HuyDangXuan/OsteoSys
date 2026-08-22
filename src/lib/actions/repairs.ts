@@ -477,6 +477,9 @@ export async function updateRepairTimeline(
             calibration: {
               lastDate: now,
               nextDueDate: nextDue,
+              certifiedBy: techName,
+              certificateNumber: `ISCD-REP-${ticketCode}`,
+              iscdStandard: true,
               qcResult: "passed",
               phantomCv: 0.72,
               calibratedBy: techName,

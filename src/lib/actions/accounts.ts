@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
 import { getCollection } from "@/lib/mongodb";
 import {
   COLLECTIONS,
@@ -10,7 +11,7 @@ import {
   AccountAppeal,
 } from "@/types/db";
 import { recordAuditLog } from "@/lib/audit";
-import { getSessionUser } from "@/lib/jwt";
+import { getSessionUser, signAccessToken, AUTH_COOKIE_NAME } from "@/lib/jwt";
 import {
   createAccountSchema,
   CreateAccountFormData,
@@ -339,11 +340,44 @@ export async function updateAccount(
 
     await col.updateOne({ _id: target._id }, { $set: updateDoc });
 
+    // Check if the account being updated is the current logged-in user
+    const isEditingSelf =
+      session &&
+      (session.accountId === target._id.toString() ||
+        session.email.toLowerCase() === target.email.toLowerCase());
+
+    if (isEditingSelf) {
+      // Re-sign access token with fresh fullName, role, clinicName
+      const newAccessToken = await signAccessToken(
+        {
+          accountId: target._id.toString(),
+          email: target.email,
+          fullName: updateDoc.fullName,
+          role: updateDoc.role,
+          status: target.status,
+          clinicName: updateDoc.clinicName,
+        },
+        "24h"
+      );
+
+      const cookieStore = await cookies();
+      cookieStore.set({
+        name: AUTH_COOKIE_NAME,
+        value: newAccessToken,
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+        maxAge: 60 * 60 * 24,
+      });
+    }
+
     await recordAuditLog({
       actor: {
+        accountId: session?.accountId,
         email: session?.email || "admin@osteosys.vn",
         fullName: session?.fullName || "Super Admin",
-        role: "super_admin",
+        role: session?.role || "super_admin",
       },
       action: "account.update",
       resource: "account",
@@ -354,13 +388,31 @@ export async function updateAccount(
       status: "success",
     });
 
+    revalidatePath("/admin", "layout");
     revalidatePath("/admin/accounts");
     revalidatePath("/admin/tai-khoan");
     revalidatePath("/admin");
 
+    const updatedAccountItem: AccountListItem = {
+      id: target._id.toString(),
+      email: target.email,
+      fullName: updateDoc.fullName,
+      phone: updateDoc.phone,
+      clinicName: updateDoc.clinicName,
+      avatarUrl: target.avatarUrl,
+      role: updateDoc.role,
+      roleLabel: ROLE_LABELS[updateDoc.role] || updateDoc.role,
+      status: target.status,
+      statusLabel: STATUS_LABELS[target.status] || target.status,
+      appealCount: target.appealNotes?.length || 0,
+      lastLoginRelative: getRelativeTime(target.lastLoginAt),
+      createdAt: target.createdAt ? new Date(target.createdAt).toISOString() : new Date().toISOString(),
+    };
+
     return {
       success: true,
-      message: `Đã cập nhật thông tin tài khoản "${target.fullName}" thành công!`,
+      message: `Đã cập nhật thông tin tài khoản "${updateDoc.fullName}" thành công!`,
+      user: updatedAccountItem,
     };
   } catch (error) {
     console.error("Error in updateAccount:", error);

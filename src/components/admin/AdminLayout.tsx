@@ -2,6 +2,7 @@
 
 import React from "react";
 import { AdminProvider, useAdmin } from "./AdminThemeContext";
+import { AuthProvider } from "@/components/providers/auth-provider";
 import AdminSidebar from "./AdminSidebar";
 import AdminTopbar from "./AdminTopbar";
 import CommandPalette from "./CommandPalette";
@@ -34,8 +35,10 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
-    <AdminProvider>
-      <AdminLayoutInner>{children}</AdminLayoutInner>
-    </AdminProvider>
+    <AuthProvider>
+      <AdminProvider>
+        <AdminLayoutInner>{children}</AdminLayoutInner>
+      </AdminProvider>
+    </AuthProvider>
   );
 }

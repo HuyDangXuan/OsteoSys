@@ -44,6 +44,7 @@ import { SkeletonDataTable } from "@/components/ui/skeleton";
 import { TableEmptyState } from "@/components/admin/TableStates";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { CountUp } from "@/components/admin/DynamicStatCards";
+import { useAuth } from "@/components/providers/auth-provider";
 import {
   getAccounts,
   getCurrentAccount,
@@ -198,7 +199,7 @@ export default function AdminAccountsPage() {
     toast.success("Đã sinh mật khẩu ngẫu nhiên an toàn!");
   };
 
-  // --- SUBMIT HANDLERS ---
+  const { user: authUser, updateCurrentUser } = useAuth();
 
   // Handle Create Account
   const handleCreateSubmit = async (e: React.FormEvent) => {
@@ -239,6 +240,27 @@ export default function AdminAccountsPage() {
       if (res.success) {
         toast.success(res.message);
         setIsEditModalOpen(false);
+        if (
+          authUser &&
+          (authUser.id === selectedAccount.id ||
+            authUser.email.toLowerCase() === selectedAccount.email.toLowerCase())
+        ) {
+          updateCurrentUser({
+            fullName: editFormData.fullName,
+            phone: editFormData.phone,
+            clinicName: editFormData.clinicName,
+            role: editFormData.role,
+          });
+          if (currentUser) {
+            setCurrentUser({
+              ...currentUser,
+              fullName: editFormData.fullName,
+              phone: editFormData.phone,
+              clinicName: editFormData.clinicName,
+              role: editFormData.role,
+            });
+          }
+        }
         setSelectedAccount(null);
         fetchAccountsData();
       } else {

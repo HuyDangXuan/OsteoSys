@@ -59,11 +59,15 @@ export type DeviceStatus =
 export interface DeviceCalibration {
   lastDate: Date;
   nextDueDate: Date;
-  qcResult: "passed" | "warning" | "failed";
-  phantomCv: number; // Coefficient of Variation, e.g., 0.8%
-  calibratedBy?: string;
+  certifiedBy: string; // Tên kỹ sư/đơn vị kiểm chuẩn
+  certificateNumber?: string; // Số tem / số biên bản kiểm định
+  iscdStandard: boolean; // Đạt chuẩn ISCD/WHO (true/false)
+  qcResult?: "passed" | "warning" | "failed";
+  phantomCv?: number; // Coefficient of Variation, e.g., 0.8%
+  calibratedBy?: string; // Backward compatible alias for certifiedBy
   certificateUrl?: string;
-  notes?: string;
+  certifyingBody?: string;
+  notes?: string; // Ghi chú tình trạng đầu dò/kết quả test
 }
 
 export interface Device {
@@ -73,11 +77,16 @@ export interface Device {
   yearManufactured: number;
   currentStatus: DeviceStatus;
   location: string; // Warehouse or Hospital/Clinic Name
+  probeType?: string;
+  purchaseDate?: Date;
+  createdBy?: ObjectId | null; // ID người nhập kho / tạo bản ghi
+  createdByName?: string | null; // Snapshot tên người nhập kho
   currentPartnerId?: ObjectId | null;
   currentContractId?: ObjectId | null;
   calibration: DeviceCalibration;
   totalScansCount: number;
-  accessoriesIncluded: string[]; // e.g. ["Bóng dầu Silicone", "Khối Phantom Hologic", "Dây nguồn"]
+  accessories?: string[]; // Danh sách phụ kiện đi kèm thực tế được chọn
+  accessoriesIncluded: string[]; // e.g. ["Bóng dầu Silicone tiếp xúc", "Khối Phantom Hologic kiểm chuẩn"]
   notes?: string;
   createdAt: Date;
   updatedAt: Date;

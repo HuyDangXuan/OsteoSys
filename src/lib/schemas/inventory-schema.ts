@@ -17,13 +17,16 @@ export const deviceModelEnum = z.enum(["Sonost 3000", "Sonost 3000 PRO"]);
 export const deviceCalibrationSchema = z.object({
   lastDate: z.coerce.date().default(() => new Date()),
   nextDueDate: z.coerce.date().optional(),
+  certifiedBy: z.string().min(1, "Vui lòng nhập tên kỹ sư/đơn vị kiểm chuẩn").default("Kỹ sư Kiểm Chuẩn"),
+  certificateNumber: z.string().optional(),
+  iscdStandard: z.boolean().default(true),
   qcResult: qcResultEnum.default("passed"),
   phantomCv: z.coerce
     .number()
     .min(0, "Hệ số biến thiên không thể âm")
     .max(10, "Hệ số biến thiên không thể vượt quá 10%")
     .default(0.8),
-  calibratedBy: z.string().default("Kỹ sư OsteoSys"),
+  calibratedBy: z.string().optional(),
   certifyingBody: z.string().default("Trung tâm Kiểm chuẩn Y Sinh OsteoSys"),
   certificateUrl: z.string().optional(),
   notes: z.string().optional(),
@@ -55,11 +58,20 @@ export const createDeviceSchema = z.object({
   currentStatus: deviceStatusEnum.default("available"),
   calibration: deviceCalibrationSchema.default({
     lastDate: new Date(),
+    certifiedBy: "Kỹ sư Kiểm Chuẩn",
+    iscdStandard: true,
     qcResult: "passed",
     phantomCv: 0.8,
-    calibratedBy: "Kỹ sư Nguyễn Văn Tuấn (Kỹ Thuật OsteoSys)",
     certifyingBody: "Trung tâm Kiểm chuẩn Y Sinh OsteoSys",
   }),
+  accessories: z
+    .array(z.string())
+    .default([
+      "Bóng dầu Silicone tiếp xúc",
+      "Khối Phantom Hologic kiểm chuẩn",
+      "Dây cáp nguồn chuẩn y tế",
+      "Giấy in nhiệt 58mm",
+    ]),
   accessoriesIncluded: z
     .array(z.string())
     .default([

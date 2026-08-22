@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 import { getCollection } from "@/lib/mongodb";
 import { COLLECTIONS, Device } from "@/types/db";
 import { recordAuditLog } from "@/lib/audit";
+import { getSessionUser } from "@/lib/jwt";
 import { Filter } from "mongodb";
 
 export const dynamic = "force-dynamic";
@@ -97,6 +98,7 @@ export async function GET(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
+    const session = await getSessionUser();
     const body = await request.json();
     const { serialNumber, status, location, qcResult, phantomCv, notes } = body;
 
@@ -137,12 +139,21 @@ export async function PATCH(request: Request) {
 
     if (qcResult || phantomCv !== undefined) {
       const nextDue = new Date(now.getTime() + 90 * 86400000);
+      const certifiedByName =
+        existing.calibration?.certifiedBy ||
+        existing.calibration?.calibratedBy ||
+        session?.fullName ||
+        "Kỹ sư Kiểm Chuẩn";
+
       updateDoc.calibration = {
         lastDate: now,
         nextDueDate: nextDue,
+        certifiedBy: certifiedByName,
+        certificateNumber: existing.calibration?.certificateNumber,
+        iscdStandard: qcResult !== "failed",
         qcResult: qcResult || existing.calibration?.qcResult || "passed",
         phantomCv: phantomCv !== undefined ? Number(phantomCv) : existing.calibration?.phantomCv || 0.8,
-        calibratedBy: "Kỹ sư Nguyễn Văn Tuấn (Kỹ Thuật OsteoSys)",
+        calibratedBy: certifiedByName,
         notes: notes || existing.calibration?.notes,
       };
     }
@@ -151,7 +162,12 @@ export async function PATCH(request: Request) {
 
     // Record Audit Log
     await recordAuditLog({
-      actor: { email: "admin@osteosys.vn", fullName: "BS. Nguyễn Trọng Hải", role: "super_admin" },
+      actor: {
+        accountId: session?.accountId,
+        email: session?.email || "admin@osteosys.vn",
+        fullName: session?.fullName || "BS. Nguyễn Trọng Hải",
+        role: session?.role || "super_admin",
+      },
       action: "status_change",
       resource: "device",
       resourceId: serialNumber,

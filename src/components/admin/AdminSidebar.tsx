@@ -19,9 +19,12 @@ import {
   Radio,
   ExternalLink,
   X,
+  Building2,
+  ShieldAlert,
 } from "lucide-react";
 import { useAdmin } from "./AdminThemeContext";
-import { getCurrentAccount, getAccounts } from "@/lib/actions/accounts";
+import { useAuth } from "@/components/providers/auth-provider";
+import { getAccounts } from "@/lib/actions/accounts";
 import { AccountRole } from "@/types/db";
 
 interface NavItem {
@@ -65,19 +68,19 @@ const navItems: NavItem[] = [
     badgeType: "success",
   },
   {
-    name: "Khách hàng",
+    name: "Khách hàng B2B",
     href: "/admin/khach-hang",
     aliases: ["/admin/partners"],
-    icon: Users,
+    icon: Building2,
   },
   {
-    name: "Quản lý Tài khoản",
+    name: "Tài khoản",
     href: "/admin/accounts",
     aliases: ["/admin/tai-khoan"],
-    icon: ShieldCheck,
-    requireRole: "super_admin",
+    icon: ShieldAlert,
     badgeKey: "pendingAccounts",
     badgeType: "warning",
+    requireRole: "super_admin",
   },
   {
     name: "Cài đặt",
@@ -89,6 +92,7 @@ const navItems: NavItem[] = [
 
 export default function AdminSidebar() {
   const pathname = usePathname();
+  const { user } = useAuth();
   const {
     theme,
     toggleTheme,
@@ -119,6 +123,12 @@ export default function AdminSidebar() {
   });
 
   useEffect(() => {
+    if (user?.role) {
+      setCurrentUserRole(user.role);
+    }
+  }, [user]);
+
+  useEffect(() => {
     const fetchSidebarData = async () => {
       try {
         // 1. Fetch devices stats
@@ -140,15 +150,8 @@ export default function AdminSidebar() {
           }));
         }
 
-        // 2. Fetch user session & pending accounts count
-        const [user, accRes] = await Promise.all([
-          getCurrentAccount(),
-          getAccounts({ status: "pending", limit: 1 }),
-        ]);
-
-        if (user?.role) {
-          setCurrentUserRole(user.role);
-        }
+        // 2. Fetch pending accounts count
+        const accRes = await getAccounts({ status: "pending", limit: 1 });
         if (accRes?.counts) {
           setDynamicCounts((prev) => ({
             ...prev,
